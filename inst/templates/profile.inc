@@ -6,7 +6,7 @@ if (ref $user eq "HASH") {
 	our ($type, $email, $stories, $last_story_headline, $username);
 
 	$type = $babs->{levels}[$user->{type}];
-	$email = $babs->{of}->email($user->{email});
+	$email = $babs->{oof}->email($user->{email});
 	$stories = $babs->{dbh}->query("
 			SELECT
 				COUNT(*)
@@ -33,7 +33,7 @@ if (ref $user eq "HASH") {
 					$babs->{time_format});
 		my $last_story_url = $babs->build_path("view",
 					story_id => $last_story->{story_id});
-		$last_story_headline = $babs->{of}->link("&quot;$last_story_headline&quot; " .
+		$last_story_headline = $babs->{oof}->link("&quot;$last_story_headline&quot; " .
 					"posted on $last_story_date");
 	} else {
 		$last_story_headline = "Never";
