@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export PERL5LIB=../lib:../../thraxx/lib:$PERL5LIB
+export PERL5LIB=../lib:../../thraxx/lib:../../wasp2:$PERL5LIB
 
 host=130.23.23.23
 
