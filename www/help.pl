@@ -2,9 +2,10 @@
 
 use Babs;
 use strict;
+use warnings;
 
 my $babs = Babs->new(shift);
-my $of = $babs->{of};
+my $oof = $babs->{oof};
 my $help_id = $babs->{req}->param('help_id') || 0;
 
 my ($title, @help) = @{{
@@ -58,15 +59,15 @@ my ($title, @help) = @{{
 if ($title && @help)
 {
 	print	$babs->template_expand("quick_header", {title => "Help"}),
-		$of->header($title);
+		$oof->header($title);
 
-	print $of->p($_) foreach @help;
+	print	$oof->p($_) foreach @help;
 
-	print	$of_closewin("Close Window"),
+	print	$oof_closewin("Close Window"),
 		$babs->template_expand("quick_footer");
 } else {
 	print	$babs->template_expand("quick_header", {title => "Error"}),
-		$of->header("Error"),
-		$of->p("No help information could be found for the requested item"),
+		$oof->header("Error"),
+		$oof->p("No help information could be found for the requested item"),
 		$babs->template_expand("quick_footer");
 }

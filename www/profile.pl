@@ -3,9 +3,10 @@
 
 use Babs;
 use strict;
+use warnings;
 
 my $babs = Babs->new(shift);
-my $of = $babs->{of};
+my $oof = $babs->{oof};
 
 my $user_id = $babs->req("user_id") || 0;
 
@@ -13,13 +14,13 @@ if ($babs->user_exists($user_id))
 {
 	my $user = $babs->user_get($user_id);
 	print	$babs->header("User Profile"),
-		$of->header("User Profile"),
+		$oof->header("User Profile"),
 		$babs->template_expand("user", $user),
 		$babs->footer();
 
 } else {
 	print	$babs->header("Error"),
-		$of->header("Error"),
-		$of->p("The requested user could not be found."),
+		$oof->header("Error"),
+		$oof->p("The requested user could not be found."),
 		$babs->footer();
 }
