@@ -1,0 +1,68 @@
+# template.inc - Babs template routines
+# $Id$
+
+sub template_expand
+{
+	my ($__this, $__type, %__args) = @_;
+
+	my $__file  = $__this->{templates_dir} . "/$__type";
+
+	# Load template include file
+	delete $INC{"$__file.inc"} if exists $INC{"$__file.inc"};
+
+	package Babs::NullTemplate;
+	
+	no strict 'vars';
+	
+	# Import args to natural name
+	my ($__k, $__v);
+	while (($__k, $__v) = each %__args)
+	{
+		if ($__k =~ /^[a-zA-Z]+$/)
+		{
+			our $$__k = $__v;
+		}
+	}
+	
+	eval {
+		require "$__file.inc";
+	}
+
+	# Check for errors
+	return "" if $@;
+
+	my $__template = $__this->slurp_file("$__file.t");
+
+	# Substitute variables
+	$__template =~	s<
+				({?)			# Optional { ... } delimiter
+				(
+					[\$@%]		# Scalar, array, hash
+					[a-zA-Z_]	# First char
+					[a-zA-Z0-9_]+	# Subsequent chars
+					(->)?		# Optional dereference
+					(?:
+						(?: \[ .*? \] )
+						|
+						(?: { .* ? } )
+					)*		# Any amount of subscripts
+				)
+				\\1
+			><$1>gxee;
+
+	package Babs;
+
+	# Clear Babs::NullTemplate
+	while ( ($__k) = each %Babs::NullTemplate::)
+	{
+		delete $Babs::NullTemplate::{$k};
+	}
+
+	return $__template;
+}
+
+sub template_exists
+{
+}
+
+return 1;
