@@ -3,7 +3,9 @@
 
 =head2 Cryptographic Routines
 
-
+This sub-module provides cryptographic-related routines for the
+secure transfer and storage of important information, such as
+relevant user passwords.
 
 =over
 
@@ -20,7 +22,7 @@ use constant CRYPT_EXT_DES	=> 2;
 use constant CRYPT_MD5		=> 3;
 use constant CRYPT_BLOWFISH	=> 4;
 
-=item $babs->crypt($data)
+=item C<< $encrypted = $babs->crypt($data); >>
 
 This method will encrypt the argued data according to the configured
 cryptographic settings.
@@ -32,7 +34,7 @@ sub crypt {
 	return crypt($data, $this->{crypt_key});
 }
 
-=item $babs->rand_str($size, $type);
+=item C<< $str = $babs->rand_str($size, $type); >>
 
 This method will generate a string of length C<$size> of random characters
 from the character domain specified by C<$type>. The following values for
@@ -85,7 +87,7 @@ sub rand_str {
 	return $str;
 }
 
-=item $babs->gen_key($ktype);
+=item C<< $key = $babs->gen_key($ktype); >>
 
 This method generates a cryptographic key for future encryption
 operations.  The following key types are recognized.
@@ -95,7 +97,8 @@ operations.  The following key types are recognized.
 =item C<CRYPT_DES>
 
 This specifies that a key suitable for the Data Encryption Standard
-algorithm should be generated.
+algorithm should be generated.  This is the most primitive and most
+likely widely available, but coincidentally the weakest as well.
 
 =item C<CRYPT_EXTDES>
 
@@ -114,7 +117,8 @@ systems.  Consult your system's L<crypt(3)> manual.
 
 This specifies that a key suitable for the Blowfish algorithm should be
 generated.  This may only be available on certain systems.  Consult your
-system's L<crypt(3)> manual.
+system's L<crypt(3)> manual.  The Blowfish algorithm is a strong, fast
+algorithm that you should consider using, should your system support it.
 
 =back
 
