@@ -46,7 +46,7 @@ sub oof_login_form {
 		);
 }
 
-sub of_close_window {
+sub oof_close_window {
 	my ($this, $title) = @_;
 
 	my $data = $this->encode_slashes($this->{oof}->link(value=>$title,
@@ -57,7 +57,7 @@ sub of_close_window {
 		"</script>";
 }
 
-sub of_popup {
+sub oof_popup {
 	my ($this, $value, $href) = @_;
 	$href = $this->encode_slashes($href);
 	my $name = "babs" . $this->random_str(8, RAND_VIS_ALNUM());
@@ -66,7 +66,7 @@ sub of_popup {
 }
 
 # Prevent multiple submissions
-sub of_js_pms {
+sub oof_js_pms {
 	return <<EOJS;
 			if (this.value == 'Processing...') {
 				window.alert('Please allow sufficient time for processing.');
@@ -78,7 +78,7 @@ sub of_js_pms {
 EOJS
 }
 
-sub of_nav_menu {
+sub oof_nav_menu {
 	my ($this, %prefs) = @_;
 	my $offset = $prefs{offset} && $prefs{offset} =~ /^\d+$/ ? $prefs{offset} : 0;
 	my $total  = $prefs{total}  && $prefs{total}  =~ /^\d+$/ ? $prefs{total}  : 0;
@@ -132,7 +132,7 @@ sub of_nav_menu {
 	return $output;
 }
 
-sub of_error {
+sub oof_error {
 	my ($this, $msg) = @_;
 
 	print 	$this->header("Error"),
