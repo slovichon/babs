@@ -16,3 +16,4 @@ remove the users table, one already exists in thraxx (that is what thraxx is
 change OF to add ?session_id= for links
 set $babs->{session_id} in require_login() or perhaps __session_init()
 add template parsing option "simple variables only" ::= '$' \w+
+convert DBH -> DBI (remove DBH dependence)
