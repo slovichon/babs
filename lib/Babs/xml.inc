@@ -212,7 +212,7 @@ sub xml_remove
 		}
 		my $items = $doc->getElementsByTagName("item");
 		my $count = $items->getLength;
-		my ($item, $oldurl);
+		my ($item, $oldurl, $url);
 		# Remove <item>
 		for (my $i = 0; $i < $count; $i++)
 		{
