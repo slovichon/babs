@@ -30,6 +30,9 @@ Babs - Babs News System API
  $babs->rand_str;
  $babs->gen_key;
 
+ # Database-related methods
+ $babs->dbh_selectcol($stmt, @bindvals);
+
  # Event-related methods
  $babs->event_fire;
  $babs->event_has;
@@ -144,6 +147,8 @@ initialization and cleanup operations, such as constant registeration.
 =over
 
 =item comments
+
+=item dbh
 
 =item crypt
 
@@ -356,6 +361,7 @@ sub throw {
 
 require "Babs/comments.inc";
 require "Babs/crypt.inc";
+require "Babs/dbh.inc";
 require "Babs/event.inc";
 require "Babs/isr.inc";
 require "Babs/misc.inc";
