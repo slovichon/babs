@@ -90,12 +90,15 @@ sub construct
 	# Set other properties
 	$prefs{error_const_group} = AutoConstantGroup->new;
 
-	# Strict-preference setting
-	tie %prefs, 'Babs::Prefs', %prefs unless tied %prefs;
+	unless (tied %prefs)
+	{
+		# Strict-preference setting
+		tie %prefs, 'Babs::Prefs', %prefs unless tied %prefs;
 
-	# Fill up %prefs
-	my ($path) = ($INC{'Babs.pm'} =~ m!(.*/)!);
-	eval slurp_file($prefs{wasp}, "$path/babs-config.inc");
+		# Fill up %prefs
+		my ($path) = ($INC{'Babs.pm'} =~ m!(.*/)!);
+		eval slurp_file($prefs{wasp}, "$path/babs-config.inc");
+	}
 
 	my $this = bless \%prefs, ref($class) || $class;
 
