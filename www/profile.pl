@@ -7,7 +7,7 @@ use strict;
 my $babs = Babs->new(shift);
 my $of = $babs->{of};
 
-my $user_id = $babs->request("user_id") || 0;
+my $user_id = $babs->req("user_id") || 0;
 
 if ($babs->user_exists($user_id))
 {

@@ -183,7 +183,7 @@ sub post {
 	return $this->{cgi}->param($var);
 }
 
-sub request {
+sub req {
 	my ($this, $var) = @_;
 	return $this->{cgi}->param($var);
 }
