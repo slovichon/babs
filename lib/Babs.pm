@@ -6,7 +6,7 @@ use OF;
 use DBH qw(:all);
 use Exporter;
 
-BEGIN: {
+BEGIN {
 	if ($ENV{MOD_PERL})
 	{
 		require Apache;
@@ -25,9 +25,23 @@ use constant E_NONE => 0;
 
 our $VERSION = 0.1;
 
+sub create
+{
+	return __PACKAGE__->new(
+		wasp	=> WASP->new(),
+		isapi	=> $ENV{MOD_PERL} ? Apache::Request->new(shift) : CGI->new(),
+	);
+}
+
 sub new
 {
 	my ($class, %prefs) = @_;
+
+	die("No WASP object specified")	unless $prefs{wasp};
+	die("No ISAPI specified")	unless $prefs{isapi};
+
+	# Strict-preference setting
+	tie %prefs, 'Babs::Prefs', %prefs;
 
 	# This should fill up %prefs
 	require "babs-config.inc";
@@ -93,6 +107,37 @@ sub DESTROY
 
 	# Propagate destruction
 	$this->_xml_cleanup();
+}
+
+package Babs::Prefs;
+
+sub TIEHASH
+{
+	my ($class, %prefs) = @_;
+	return bless \%prefs, $class;
+}
+
+sub EXISTS
+{
+	my ($this, $k) = @_;
+	return exists $this->{$k};
+}
+
+sub FETCH
+{
+	my ($this, $k) = @_;
+	unless (exists $this->{$k})
+	{
+		$this->{wasp}->throw("Requested Babs directive not set; directive: $k");
+	}
+	return $this->{$k};
+}
+
+sub STORE
+{
+	my ($this, $k, $v) = @_;
+	# Perhaps we should do some checking here...
+	$this->{$k} = $v;
 }
 
 return 1;
