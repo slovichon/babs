@@ -60,7 +60,7 @@ sub build_url
 {
 	my ($this) = shift;
 	# Default to PATH_REL if none is specified
-	my $type = grep {$_ == $_[0]} (PATH_ABS PATH_REL PATH_SYS) ? shift : PATH_REL;
+	my $type = (grep {$_ == $_[0]} (PATH_ABS, PATH_REL, PATH_SYS)) ? shift : PATH_REL;
 	my ($file, %args) = @_;
 	my $url = $this->build_path($type) . $file . ".pl?";
 	my ($k, $v);
@@ -146,7 +146,8 @@ sub mail
 sub get_url
 {
 	my ($this) = @_;
-	return $this->{isapi}->url(-absolute=>1);
+	return $ENV{MOD_PERL} ? $this->{isapi}->uri :
+		$this->{isapi}->url(-absolute=>1);
 }
 
 sub redirect
@@ -164,7 +165,7 @@ sub redirect
 		$url = $this->build_path(PATH_ABS) . $url;
 	} else {
 		# Relative path
-		my $path = $this->{isapi}->url(-absolute=>1);
+		my $path = $this->get_url;
 		$path =~ s{[^/]+$}{}; # get cwd
 		$url = $this->build_path(PATH_ABS) . $path . $url;
 	}
