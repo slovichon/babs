@@ -204,6 +204,18 @@ sub story_get
 	return \%story;
 }
 
+# sub story_get {
+#	my ($this, $story_id) = @_;
+#	return 	$this->story_search
+#		(
+#			criteria => [
+#				[
+#					{field=>"story_id", value=>$story_id, op=>"="}
+#				]
+#			]
+#		);
+# }
+
 # Note: grabs top-level comments only
 # (that's all we need it for).
 sub story_get_comments
@@ -233,6 +245,65 @@ sub story_exists
 						babs_stories
 					WHERE
 						story_id = $story_id", DB_COL);
+}
+
+sub story_search {
+	my ($this, %prefs) = @_;
+	# Determine offset
+	my $offset = $prefs{offset} || 0;
+	$offset = 0 unless $offset =~ /^\d+$/;
+	# Determine sort order
+	my $sort = $prefs{sort};
+	$sort = "ASC" unless Babs::in_array($sort, [qw(ASC DESC)]);
+	# Determine output template
+#	my $template = $prefs{template};
+#	return [] unless $this->template_exists($template);
+	# Determine result limit (check bounds)
+	my $limit = $prefs{limit} || 0;
+	$limit = 0 unless $limit =~ /^\d+$/;
+	$limit = 0 if $limit > $this->{XXX_result_limit};
+	if ($limit) {
+		# Try user preference
+		# Try default preference
+	}
+	# Build database query
+	my $where = "";
+	if ($prefs{criteria} && ref $prefs{criteria} eq "ARRAY") {
+		$where .= " WHERE ";
+		my ($ands, $ors, $criteria, $val);
+		foreach $ands (@{ $prefs{criteria} }) { # foreach `and' in `ors'
+			$where .= " ( ";
+			foreach $criteria (@{ $ands }) {
+				if (defined($val = $this->isr_check_field("babs_stories",
+					$criteria->{field}, $criteria->{op}, $criteria->{value}))) {
+					$where .= sprintf " %s %s %s AND ", $criteria->{field},
+							$criteria->{op}, $val;
+				}
+			}
+			$where =~ s/ AND $//;
+			$where .= " ) OR ";
+		}
+		$where =~ s/ OR $//;
+	}
+	# Query database
+	my $dbh = $this->{dbh};
+	$dbh->query("	SELECT
+				*
+			FROM
+				babs_stories
+			$where
+			ORDER BY
+				$sort
+			LIMIT
+				$limit,
+				$offset", DB_ROWS);
+	my @stories = ();
+	my %story;
+	while (%story = $dbh->fetch_row)
+	{
+		push @stories, {%story};
+	}
+	return \@stories;
 }
 
 return TRUE();
