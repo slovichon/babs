@@ -29,7 +29,7 @@ sub udf_validate
 		FLD_COMMENT	=> "comment_fields",
 	);
 
-	$this->{wasp}->throw("Unrecognized field type; type: $type") unless exists $map{$type};
+	$this->throw("Unrecognized field type; type: $type") unless exists $map{$type};
 
 	# We will process all items and generate
 	# as much error information as possible

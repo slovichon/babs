@@ -22,7 +22,7 @@ sub event_fire
 	my $this = shift;
 	my $type = shift;
 
-	$this->{wasp}->throw() if $type <= 0 || $type > _EVT_MAX;
+	$this->throw() if $type <= 0 || $type > _EVT_MAX;
 	
 	foreach my $action (@{ $this->{events}[$type] })
 	{
@@ -39,7 +39,7 @@ sub event_has
 sub event_register
 {
 	my ($this, $type, $action) = @_;
-	$this->{wasp}->throw() if $type <= 0 || $type > _EVT_MAX;
+	$this->throw() if $type <= 0 || $type > _EVT_MAX;
 	if (ref($this->{events}[$type]) eq "ARRAY")
 	{
 		push @{ $this->{events}[$type] }, $action;

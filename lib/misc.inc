@@ -8,7 +8,7 @@ sub slurp_file
 	local $/;
 	unless (open F, "< $file")
 	{
-		$this->{wasp}->throw("Cannot open file; file: $file; mode: read-only");
+		$this->throw("Cannot open file; file: $file; mode: read-only");
 	}
 	my $data = <F>;
 	close F;
