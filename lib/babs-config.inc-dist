@@ -33,7 +33,7 @@ $prefs{story_url_tlds}		= qw(com co.uk net org gov edu cc de);
 $prefs{story_allowed_html}	= {br=>[], p=>[qw(align)], pre=>[], b=>[], i=>[], a=>[qw(href)]};
 $prefs{story_strip_expr}	= TRUE;
 $prefs{story_attr_proto}	= qw(href data src action);
-$prefs{story_allowed_proto}	= qw(http https news ftp);
+$prefs{story_allowed_protos}	= qw(http https news ftp);
 $prefs{story_del_rebuild}	= TRUE;
 
 # wasp
