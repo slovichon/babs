@@ -30,7 +30,7 @@ sub session_require_login {
 		my $user = $this->user_get($user_id);
 		return $user_id if $user_id && $user->{type} > $priv;
 	}
-	
+
 	# Do login form show
 	if ($this->{auth_type} == AUTH_HTTP()) {
 		my $tried = 0;
@@ -63,9 +63,10 @@ sub session_require_login {
 		} else {
 #			XXX: CGI.pm auth
 		}
+
 		$this->header("Error");
 #		$this->header($tried ? "Error" : "Log In"));
-		print	$this->{of}->p("The credentials you have specified are ".
+		print	$this->{oof}->p("The credentials you have specified are ".
 					"invalid. Please try again.");
 		$this->footer();
 	} else {
@@ -73,12 +74,14 @@ sub session_require_login {
 		print $this->of_login_form();
 		$this->footer();
 	}
+
 	exit(2);
 }
 
 sub session_is_logged_in {
 	my ($this) = @_;
 	my $user_id;
+
 	# Determine if the user is logged in according
 	# to AUTH_TYPE and a valid session exists.
 	if ($this->{auth_type} == AUTH_HTTP()) {
@@ -98,8 +101,7 @@ sub session_is_logged_in {
 #	} else {
 #		$this->throw("Invalid auth_type Babs configuration directive value");
 	}
-	return $user_id if $user_id;
-	return undef;
+	return $user_id ? $user_id : undef;
 }
 
 sub session_logout {
@@ -124,7 +126,7 @@ sub session_login {
 						babs_users
 					WHERE
 						username = '$username' ", DB_COL);
-	
+
 	return E_USER_EXISTS() unless $user_id;
 
 	my $ret = $thraxx->session_auth($user_id, $password);
