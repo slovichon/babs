@@ -37,6 +37,7 @@ sub new
 
 require "comments.inc";
 require "crypt.inc";
+require "event.inc";
 require "isr.inc";
 require "sessions.inc";
 require "stories.inc";
