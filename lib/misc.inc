@@ -89,4 +89,16 @@ sub http_encode
 	return $this->{}
 }
 
+sub in_array
+{
+	my ($needle, $hay) = @_;
+
+	foreach my $i (@$hay)
+	{
+		return TRUE if $i == $needle;
+	}
+
+	return FALSE;
+}
+
 return 1;
