@@ -1,6 +1,7 @@
 # Babs story routines
 # $Id$
 
+use DBH qw(:all);
 use strict;
 
 sub _story_init
@@ -252,9 +253,14 @@ sub story_search {
 	# Determine offset
 	my $offset = $prefs{offset} || 0;
 	$offset = 0 unless $offset =~ /^\d+$/;
+	# Determine sort field
+	my $sort_field = $prefs{sort_field};
+	$sort_field = "create_date" unless
+		$this->isr_contains("babs_stories", $sort_field);
 	# Determine sort order
-	my $sort = $prefs{sort};
-	$sort = "ASC" unless Babs::in_array($sort, [qw(ASC DESC)]);
+	my $sort_order = $prefs{sort_order};
+	$sort_order = "ASC" unless
+		Babs::in_array($sort_order, [qw(ASC DESC)]);
 	# Determine output template
 #	my $template = $prefs{template};
 #	return [] unless $this->template_exists($template);
@@ -268,20 +274,22 @@ sub story_search {
 	}
 	# Build database query
 	my $where = "";
-	if ($prefs{criteria} && ref $prefs{criteria} eq "ARRAY") {
+	if (ref $prefs{criteria} eq "ARRAY" && @{ $prefs{criteria} }) {
 		$where .= " WHERE ";
-		my ($ands, $ors, $criteria, $val);
-		foreach $ands (@{ $prefs{criteria} }) { # foreach `and' in `ors'
+		my ($ands, $criteria, $val);
+		# foreach `and' group in the `or' groups
+		foreach $ands (@{ $prefs{criteria} }) {
 			$where .= " ( ";
-			foreach $criteria (@{ $ands }) {
-				if (defined($val = $this->isr_check_field("babs_stories",
-					$criteria->{field}, $criteria->{op}, $criteria->{value}))) {
-					$where .= sprintf " %s %s %s AND ", $criteria->{field},
+			foreach $criteria (@$ands) {
+				if (defined($val = $this->isr_check_field(
+					"babs_stories", $criteria->{field},
+					$criteria->{op}, $criteria->{value}))) {
+					$where .= sprintf " %s %s %s AND ",
+							$criteria->{field},
 							$criteria->{op}, $val;
 				}
 			}
-			$where =~ s/ AND $//;
-			$where .= " ) OR ";
+			$where =~ s/ AND $/) OR /;
 		}
 		$where =~ s/ OR $//;
 	}
@@ -293,14 +301,13 @@ sub story_search {
 				babs_stories
 			$where
 			ORDER BY
-				$sort
+				$sort_field $sort_order
 			LIMIT
 				$limit,
 				$offset", DB_ROWS);
 	my @stories = ();
 	my %story;
-	while (%story = $dbh->fetch_row)
-	{
+	while (%story = $dbh->fetch_row) {
 		push @stories, {%story};
 	}
 	return \@stories;
