@@ -8,7 +8,7 @@ sub _comment_init {
 	my ($this) = @_;
 	my $g = $this->{error_const_group};
 
-	$g->add("E_COMMENT_COM");	# No comment field
+	$g->add("E_COMMENT_COMMENT");	# No comment field
 	$g->add("E_COMMENT_SUBJECT");	# No subject
 	$g->add("E_COMMENT_STORY");	# No such story
 	$g->add("E_COMMENT_PRIV");	# Not allowed
@@ -27,7 +27,7 @@ sub comment_add {
 	my $story = $this->story_get($comment->{story_id});
 
 	# Validate info
-	$err |= E_COMMENT_COM()		unless $comment->{comment};
+	$err |= E_COMMENT_COMMENT()	unless $comment->{comment};
 	$err |= E_COMMENT_SUBJECT()	unless $comment->{subject};
 	$err |= E_COMMENT_PRIV()	unless $this->{allow_comments};
 	$err |= E_COMMENT_MAX()		if $this->{max_comments} &&
@@ -108,7 +108,7 @@ sub comment_update {
 	my $err = E_NONE();
 
 	# Validate info
-	$err |= E_COMMENT_COM()		unless $comment->{comment};
+	$err |= E_COMMENT_COMMENT()	unless $comment->{comment};
 	$err |= E_COMMENT_SUBJECT()	unless $comment->{subject};
 	$err |= E_COMMENT_STORY()	unless $this->story_exists($comment->{story_id});
 	$err |= E_COMMENT_EXIST()	unless $this->comment_exists($comment->{comment_id});
