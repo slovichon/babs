@@ -1,12 +1,8 @@
 #!/usr/bin/perl -W
 
-use strict;
-use Thraxx;
-use WASP;
-use DBH qw(:all);
-use DBH::MySQL;
-use OF::HTML;
 use Babs;
+use strict;
+use warnings;
 
 sub _ {
 	if ($_[0]) {
@@ -44,115 +40,114 @@ my $b = Babs->construct(thraxx=>$t, wasp=>$t, dbh=>undef, skip_init=>1,
 # fail, cleanups will have to be performed.
 
 # comments.inc
-comment_add {
-comment_update {
-comment_remove {
-comment_get {
-comment_get_ancestors {
-comment_exists {
+$b->comment_add;
+$b->comment_update;
+$b->comment_remove;
+$b->comment_get;
+$b->comment_get_ancestors;
+$b->comment_exists;
 
 # crypt.inc
-crypt {
-rand_str {
-gen_key {
+$b->crypt;
+$b->rand_str;
+$b->gen_key;
 
 # dbh.inc
-dbh_selectcol {
-dbh_quote {
+$b->dbh_selectcol;
+$b->dbh_quote;
 
 # events.inc
-event_fire {
-event_has {
-event_register {
+$b->event_fire;
+$b->event_has;
+$b->event_register;
 
 # isr.inc
-isr_check_field {
+$b->isr_check_field;
 
 # misc.inc
-sub slurp_file {
-sub valid_email {
-sub hasheq {
-sub build_url {
-sub build_path {
-sub in_array {
-sub gen_class {
-sub file_move {
-sub file_remove {
-sub _mail {
-$args{subject}	=~ s/\r\n|[\r\n]//g;
-sub mail {
-sub get_url {
-sub redirect {
-sub arrayeq {
-sub post {
-sub req {
-sub valid_referer {
-sub help_id {
-sub result_limit {
-sub page_limit {
+$b->slurp_file;
+$b->valid_email;
+$b->hasheq;
+$b->build_url;
+$b->build_path;
+$b->in_array;
+$b->gen_class;
+$b->file_move;
+$b->file_remove;
+$b->mail;
+$b->get_url;
+$b->redirect;
+$b->arrayeq;
+$b->post;
+$b->req;
+$b->valid_referer;
+$b->help_id;
+$b->result_limit;
+$b->page_limit;
 
 # oof.inc
-sub oof_login_form {
-sub of_close_window {
-sub of_popup {
-sub of_js_pms {
-sub of_nav_menu {
-sub of_error {
+$b->oof_login_form;
+$b->oof_close_window;
+$b->oof_popup;
+$b->oof_js_pms;
+$b->oof_nav_menu;
+$b->oof_error;
 
 # session.inc
-sub session_auth {
-sub session_require_login {
-sub session_is_logged_in {
-sub session_logout {
-sub session_login {
+$b->session_auth;
+$b->session_require_login;
+$b->session_is_logged_in;
+$b->session_logout;
+$b->session_login;
 
 # story.inc
-sub story_add {
-sub story_update {
-sub story_remove {
-sub story_set_recent {
-sub story_get {
-sub story_get {
-sub story_get_comments {
-sub story_exists {
-sub story_search {
+$b->story_add;
+$b->story_update;
+$b->story_remove;
+$b->story_set_recent;
+$b->story_get;
+$b->story_get;
+$b->story_get_comments;
+$b->story_exists;
+$b->story_search;
 
 # str.inc
-sub escape_http {
-sub unescape_http {
-sub escape_html {
-sub escape_html {
-sub unescape_html {
-sub escape_slashes {
-sub unescape_slashes {
-sub str_parse {
+$b->escape_http;
+$b->unescape_http;
+$b->escape_html;
+$b->escape_html;
+$b->unescape_html;
+$b->escape_slashes;
+$b->unescape_slashes;
+$b->str_parse;
 
 # templates.inc
-sub template_expand {
-sub template_exists {
-sub header {
-sub footer {
-sub _udf_init {
-sub udf_validate {
-# not multiply submit data, correcting errors only one
-sub udf_update {
-sub udf_update_db {
-sub _user_init {
-sub user_add {
-sub user_update {
-sub user_get_id {
-sub user_get {
-sub user_remove {
-sub user_exists {
-sub _xml_init {
-sub _xml_cleanup {
-sub xml_getfile {
-sub xml_openfile {
-sub xml_writefile {
-sub xml_update {
-sub xml_add {
-sub xml_remove {
-sub xml_throw {
-sub xml_setup {
+$b->template_expand;
+$b->template_exists;
+$b->header;
+$b->footer;
+
+# udf.inc
+$b->udf_validate;
+$b->udf_update;
+$b->udf_update_db;
+
+# users.inc
+$b->user_add;
+$b->user_update;
+$b->user_get_id;
+$b->user_get;
+$b->user_remove;
+$b->user_exists;
+
+# xml.inc
+$b->xml_getfile;
+$b->xml_openfile;
+$b->xml_writefile;
+$b->xml_update;
+$b->xml_add;
+$b->xml_remove;
+$b->xml_throw;
+$b->xml_setup;
 
 exit 0;
