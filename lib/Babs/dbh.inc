@@ -27,7 +27,7 @@ sub dbh_selectcol {
 	my ($this, $stmt, @bindvals) = @_;
 	my $ret = $this->{dbh}->selectcol_arrayref($stmt,
 				{ MaxRows=>1 }, @bindvals);
-	return ref $ret eq "HASH" && defined $ret->[0] ? $ret->[0] : "";
+	return ref $ret eq "HASH" && defined $ret->[0] ? $ret->[0] : 0;
 }
 
 use constant SQL_REG	=> 1;
