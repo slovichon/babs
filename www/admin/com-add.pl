@@ -9,8 +9,8 @@ use warnings;
 my $babs = Babs->new(shift);
 my $story_id   = $babs->req("story_id");
 my $comment_id = $babs->req("comment_id");
-my $user_id = $babs->require_login(Babs::PERM_COMMENT_ADD, $story_id, $comment_id);
-my $parent_comment_id = 0;
+my $parent_comment_id = $babs->req("parent_comment_id");
+my $user_id = $babs->require_login(Babs::PERM_COMMENT_ADD, $story_id, $parent_comment_id);
 
 my $oof = $babs->{oof};
 my $printform = 1;		# Show "Add Comment" form by default
