@@ -1,0 +1,8 @@
+$Id$
+
+in the story/comment/user prepare routines, there is DBH::prepare_str() on
+	each value, which is acceptable for database entry but not for other
+	things (anything registered through the event)
+default template add
+	size (xxx Kilobytes)
+	est. reading time (size/readrate=num of min)
