@@ -20,7 +20,7 @@ sub slurp_file
 }
 
 use constant EMAIL_CHK_MX	=> 1;
-use constant EMAIL_CHK_HOST	=> 2;
+#use constant EMAIL_CHK_HOST	=> 2;
 use constant EMAIL_CHK_NONE	=> 3;
 
 sub valid_email
@@ -29,8 +29,11 @@ sub valid_email
 	return FALSE() unless defined $email;
 	return FALSE() unless $email =~ /^.+@(.+)$/;
 	my $host = $1;
-	return checkmx($host)			if $this->{email_check} == EMAIL_CHK_MX;
-	return defined gethostbyname($host)	if $this->{email_check} == EMAIL_CHK_HOST;
+	if ($this->{email_check} == EMAIL_CHK_MX) {
+		require Email::Valid;
+		return Email::Valid->address(-address=>$email, -mxcheck=>1);
+	}
+#	return defined gethostbyname($host)	if $this->{email_check} == EMAIL_CHK_HOST;
 	return TRUE();
 }
 
@@ -183,7 +186,7 @@ sub arrayeq
 
 	for ($i = 0; $i < @$a1; $i++)
 	{
-		return FALSE unless $a1->[$i] eq $a2->[$i]
+		return FALSE() unless $a1->[$i] eq $a2->[$i]
 	}
 
 	return @$a2 == $i;
