@@ -19,31 +19,26 @@ use constant EVT_UDF_UPDATE	=> 10;
 
 use constant _EVT_MAX		=> 10;
 
-sub event_fire
-{
+sub event_fire {
 	my $this = shift;
 	my $type = shift;
 
 	$this->throw() if $type <= 0 || $type > _EVT_MAX;
 	
-	foreach my $action (@{ $this->{events}[$type] })
-	{
+	foreach my $action (@{ $this->{events}[$type] }) {
 		$action->(@_);
 	}
 }
 
-sub event_has
-{
+sub event_has {
 	my ($this, $type) = @_;
 	return ref $this->{events}[$type] eq "ARRAY" && @{ $this->{events}[$type] };
 }
 
-sub event_register
-{
+sub event_register {
 	my ($this, $type, $action) = @_;
 	$this->throw() if $type <= 0 || $type > _EVT_MAX;
-	if (ref($this->{events}[$type]) eq "ARRAY")
-	{
+	if (ref($this->{events}[$type]) eq "ARRAY") {
 		push @{ $this->{events}[$type] }, $action;
 	} else {
 		$this->{events}[$type] = [$action];

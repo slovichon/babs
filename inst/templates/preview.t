@@ -1,13 +1,12 @@
 <table cellspacing="0" cellpadding="0" border="0" class="babsTable">
 	<tr>
 		<td class="babsHeader">
-			<a href="$story_uri">
-				$headline</a></td>
+			<a href="$story_url">$headline</a></td>
 	</tr>
 	<tr>
 		<td class="babsData1">
 			<span class="babsInfo">
-				Posted by <a href="$profile_uri">$author</a>
+				Posted by <a href="$profile_url">$author</a>
 				on $date</span></td>
 	</tr>
 	<tr>
@@ -16,9 +15,9 @@
 	</tr>
 	<tr>
 		<td class="babsFooter">
-			<a href="$story_uri">More Details</a>
+			<a href="$story_url">More Details</a>
 			<span class="babsInfo">
-			($num_comments comment(s),
-			 $num_words words(s) in story)</span></td>
+			($comments comment(s),
+			 $words words(s) in story)</span></td>
 	</tr>
 </table>

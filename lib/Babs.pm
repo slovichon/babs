@@ -8,14 +8,11 @@ use DBH qw(:all);
 use Exporter;
 use Thraxx;
 use AutoConstantGroup;
+require CGI;
 
 BEGIN {
-	if ($ENV{MOD_PERL})
-	{
+	if ($ENV{MOD_PERL}) {
 		require Apache;
-		require Apache::Request;
-	} else {
-		require CGI;
 	}
 }
 
@@ -32,9 +29,11 @@ sub new
 {
 	my $class = shift;
 	my %prefs = (
-		wasp  => WASP->new(),
-		isapi => $ENV{MOD_PERL} ? Apache::Request->new(shift) : CGI->new(),
+		wasp => WASP->new(),
+		cgi  => CGI->new(),
 	);
+
+	$prefs{req} = Apache->request(shift) if $ENV{MOD_PERL};
 
 	# Fill up %prefs
 	my ($path) = ($INC{'Babs.pm'} =~ m!(.*/)!);
@@ -42,7 +41,7 @@ sub new
 
 	# Initialize DBH
 	{
-		my %args = (wasp => $prefs{wasp});
+		my %args = ( wasp => $prefs{wasp} );
 		my %map = (
 			host		=> "dbh_host",
 			username	=> "dbh_username",
@@ -52,8 +51,7 @@ sub new
 		# These settings are optional; only pass them
 		# to DBH::new() if they are specified.
 		my ($k, $v);
-		while (($k, $v) = each %map)
-		{
+		while (($k, $v) = each %map) {
 			$args{$k} = $prefs{$v} if exists $prefs{$v};
 		}
 		$prefs{dbh} = &{$prefs{dbh_type}}(
@@ -77,8 +75,7 @@ sub new
 	return construct($class, %prefs);
 }
 
-sub construct
-{
+sub construct {
 	my ($class, %prefs) = @_;
 
 	# Error-check our environment
@@ -91,8 +88,7 @@ sub construct
 	$prefs{error_const_group} = AutoConstantGroup->new;
 	$prefs{session_id} = undef;
 
-	unless (tied %prefs)
-	{
+	unless (tied %prefs) {
 		# Strict-preference setting
 		tie %prefs, 'Babs::Prefs', %prefs unless tied %prefs;
 
@@ -116,13 +112,11 @@ sub construct
 	return $this;
 }
 
-sub throw
-{
+sub throw {
 	my ($this) = shift;
 	my $msg = "Babs Error: " . join '', @_;
 
-	if ($this->{mail_errors})
-	{
+	if ($this->{mail_errors}) {
 		$this->_mail(to=>$this->{admin_email}, from=>$this->{admin_email},
 				subject=>"$this->{site_name} Babs Error Report", body=>$msg);
 	}
@@ -148,8 +142,7 @@ require "Babs/udf.inc";
 require "Babs/users.inc";
 require "Babs/xml.inc";
 
-sub DESTROY
-{
+sub DESTROY {
 	my ($this) = @_;
 
 	# Propagate destruction
@@ -158,30 +151,25 @@ sub DESTROY
 
 package Babs::Prefs;
 
-sub TIEHASH
-{
+sub TIEHASH {
 	my ($class, %prefs) = @_;
 	return bless \%prefs, $class;
 }
 
-sub EXISTS
-{
+sub EXISTS {
 	my ($this, $k) = @_;
 	return exists $this->{$k};
 }
 
-sub FETCH
-{
+sub FETCH {
 	my ($this, $k) = @_;
-	unless (exists $this->{$k})
-	{
+	unless (exists $this->{$k}) {
 		$this->{wasp}->throw("Requested Babs directive not set; directive: $k");
 	}
 	return $this->{$k};
 }
 
-sub STORE
-{
+sub STORE {
 	my ($this, $k, $v) = @_;
 	# Perhaps we should do some checking here...
 	$this->{$k} = $v;

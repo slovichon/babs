@@ -3,61 +3,53 @@
 
 use strict;
 
-sub encode_http
-{
-	my ($this, $data) = @_;
-	$data =~ s/[^a-zA-Z0-9]/"%" . unpack("H", $1)/ge;
-	return $data;
-}
+# sub encode_http {
+#	my ($this, $data) = @_;
+#	$data =~ s/[^a-zA-Z0-9]/"%" . unpack("H", $1)/ge;
+#	return $data;
+# }
 
-sub decode_http
-{
-	my ($this, $data) = @_;
-	$data =~ s/%(\d\d)/pack("H", $1)/ge;
-	return $data;
-}
+# sub decode_http {
+#	my ($this, $data) = @_;
+#	$data =~ s/%(\d\d)/pack("H", $1)/ge;
+#	return $data;
+# }
 
-sub encode_html
-{
-	my ($this, $data) = @_;
-	my %tbl =
-	(
-		'"' => "quot",
+# sub encode_html {
+#	my ($this, $data) = @_;
+#	my %tbl = (
+#		'"' => "quot",
 #		"'" => "apos",
-		'<' => "lt",
-		'>' => "gt",
-		'&' => "amp",
-	);
-	my $c = qr![^a-zA-Z0-9_`=~\!@#\$%^*()_+\[\]{};:\|.\\,/-]!;
-	$data =~ s/$c/"\$" . (exists $tbl{$&} ? $tbl{$&} : "#" . ord($&)) . ";"/ge;
-	return $data;
-}
+#		'<' => "lt",
+#		'>' => "gt",
+#		'&' => "amp",
+#	);
+#	my $c = qr![^a-zA-Z0-9_`=~\!@#\$%^*()_+\[\]{};:\|.\\,/-]!;
+#	$data =~ s/$c/"\$" . (exists $tbl{$&} ? $tbl{$&} : "#" . ord($&)) . ";"/ge;
+#	return $data;
+# }
 
-sub decode_html
-{
-	my ($this, $data) = $_;
-	my %tbl =
-	(
-		"quot"	=> '"',
+# sub decode_html {
+#	my ($this, $data) = $_;
+#	my %tbl = (
+#		"quot"	=> '"',
 #		"apos"	=> "'",
-		"lt"	=> '<',
-		"gt"	=> '>',
-		"amp"	=> '&',
-	);
-	$data =~ s/\$#(\d+);/chr($1)/ge;
-	$data =~ s/&(.*);/exists $tbl{$1} ? $tbl{$1} : $&/ge;
-	return $data;
-}
+#		"lt"	=> '<',
+#		"gt"	=> '>',
+#		"amp"	=> '&',
+#	);
+#	$data =~ s/\$#(\d+);/chr($1)/ge;
+#	$data =~ s/&(.*);/exists $tbl{$1} ? $tbl{$1} : $&/ge;
+#	return $data;
+# }
 
-sub encode_slashes
-{
+sub encode_slashes {
 	my ($this, $data) = @_;
 	$data =~ s/['"\\]/\\$&/g;
 	return $data;
 }
 
-sub decode_slashes
-{
+sub decode_slashes {
 	my ($this, $data) = @_;
 	$data =~ s/(?<=\\)['"\\]/$&/g;
 	return $data;
@@ -65,8 +57,7 @@ sub decode_slashes
 
 # This sub is used by str_parse() to clean up HTML
 # attributes. It has no other immediate usefulness
-sub _str_attr_clean
-{
+sub _str_attr_clean {
 	my ($this, $name, $val) = @_;
 
 	# Attributes will have been matched by their delimiters ['"]
@@ -82,8 +73,7 @@ sub _str_attr_clean
 	# and passed to str_remove_css() which will remove them
 	my @mat;
 	if ($name eq "style" && $this->{story_strip_expr} &&
-		(@mat = m!([a-zA-Z0-9-]+)\s*:\s*expression\(!ig))
-	{
+	    (@mat = m!([a-zA-Z0-9-]+)\s*:\s*expression\(!ig)) {
 		$val = $this->_str_remove_css($val, \@mat);
 	}
 
@@ -93,8 +83,8 @@ sub _str_attr_clean
 # We're expected to be able to parse something such as:
 #
 #	$str = qq{
-#	foo1:bar1; glarch1:expression(func());
-#	foo2:bar2; glarch2:expression(func());
+#		foo1:bar1; glarch1:expression(func());
+#		foo2:bar2; glarch2:expression(func());
 #	}
 #
 # Given an invocation such as
@@ -103,8 +93,7 @@ sub _str_attr_clean
 #
 # we must guarentee the `glarch1' attribute will be
 # removed cleanly. We obviously cannot use regexes.
-sub _str_remove_css
-{
+sub _str_remove_css {
 	my ($this, $str, $ids) = @_;
 	my @starts = (0);
 	my @stack = ();
@@ -114,22 +103,14 @@ sub _str_remove_css
 	my $squot = FALSE();
 	my $esc   = FALSE();
 
-	for (my $i = 0; $i < $len; $i++)
-	{
+	for (my $i = 0; $i < $len; $i++) {
 		$ch = substr $str, $i, 1;
-		if ($ch eq ';' && @stack == 0)
-		{
+		if ($ch eq ';' && @stack == 0) {
 			push @starts, $i+1 if $i+1 < $len;
 		} elsif ($ch eq '"') {
-			unless ($squot or $esc)
-			{
-				$dquot = !$dquot;
-			}
+			$dquot = !$dquot unless $squot or $esc;
 		} elsif ($ch eq "'") {
-			unless ($dquot or $esc)
-			{
-				$squot = !$squot;
-			}
+			$squot = !$squot unless $dquot or $esc;
 		} elsif ($ch eq '(' || $ch eq '{' &&
 			!$dquot && !$squot) {
 			push @stack, $ch;
@@ -139,9 +120,9 @@ sub _str_remove_css
 			return "" unless pop @stack eq '{';
 		} elsif ($ch eq '\\') {
 			$esc = !$esc;
-		} else {
-			$esc = FALSE();
+			next;
 		}
+		$esc = FALSE();
 	}
 
 	# We now have an array of starting id indexes
@@ -166,12 +147,10 @@ sub _str_remove_css
 
 # This sub is used by str_parse() and is used to check
 # arbitrarily-protcoled URIs for disallowed protocols.
-sub _str_check_proto
-{
+sub _str_check_proto {
 	my ($this, $url) = @_;
 
-	if ($url =~ /^\s*([a-z]+):/)
-	{
+	if ($url =~ /^\s*([a-z]+):/) {
 		return in_array($1, $this->{story_allowed_protos});
 	}
 
@@ -183,14 +162,12 @@ use constant STR_HTML	=> (1<<1);
 use constant STR_URL	=> (1<<2);
 use constant STR_ALL	=> STR_HTML | STR_URL;
 
-sub str_parse
-{
+sub str_parse {
 	my ($this, $str, $flags) = @_;
 	
 	$str = $this->encode_html($str);
 
-	if ($flags & STR_HTML)
-	{
+	if ($flags & STR_HTML) {
 		# We should probably make an option including leaving
 		# alone, blocking, and truncating.
 		
@@ -205,14 +182,13 @@ sub str_parse
 					.*?		# Rest of tag
 				)
 				&gt;
-			}{<$1>}gsx;			# <$tag parse_attr($attr)> ?
+		}{<$1>}gsx;				# <$tag parse_attr($attr)> ?
 
 		# Allowed attributes
 		my $new = $str;
 		my $attrs  = $this->{story_allowed_attrs};
 		my $protos = $this->{story_attr_protos};
-		do
-		{
+		do {
 			$str = $new;
 			$new =~	s{
 					(				# HTML tag ($1)
@@ -235,7 +211,7 @@ sub str_parse
 						.*?			# Rest of tag
 						>			# End
 					)
-				}{
+			}{
 					$1 .				# Tag + previous attributes
 					(
 						# Validate attribute; must be allowed in
@@ -260,14 +236,12 @@ sub str_parse
 						: ""
 					) .
 					$4
-				}sex;
+			}sex;
 		} until ($new eq $str);
 	}
 
-	if ($flags & STR_URL)
-	{
-		if ($this->{story_auto_urls})
-		{
+	if ($flags & STR_URL) {
+		if ($this->{story_auto_urls}) {
 			# If admin specifies which TLDs to check, enforce them.
 			# Else any "supposed" TLD will automate.
 			my $tlds = @{ $this->{story_auto_url_tlds} } ?
@@ -320,7 +294,7 @@ sub str_parse
 #							\S*
 						)
 					)
-				}{
+			}{
 					my $url = $2;
 					$1 ? $& :					# If we matched what we don't
 											# want to, bail out
@@ -332,7 +306,7 @@ sub str_parse
 						$url : "$url/"				# URL/
 					) .
 					qq!">$3</a>!
-				}igex;
+			}igex;
 		}
 	}
 

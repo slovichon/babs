@@ -4,8 +4,7 @@
 use DBH qw(:all);
 use strict;
 
-sub _story_init
-{
+sub _story_init {
 	my ($this) = @_;
 	my $g = $this->{error_const_group};
 	
@@ -14,8 +13,7 @@ sub _story_init
 	$g->add("E_STORY_EXIST");	# Non-existant story
 }
 
-sub story_add
-{
+sub story_add {
 	my ($this, $story) = @_;
 	my $err = E_NONE();
 	my $dbh = $this->{dbh};
@@ -32,17 +30,16 @@ sub story_add
 	return ($err, $uerr) if $err != E_NONE() || @$uerr;
 
 	# Prepare data
-	$story->{headline}	= $dbh->prepare_str($this->str_parse(
-					$story->{headline}, STR_NONE()), SQL_REG);
-	$story->{story}		= $dbh->prepare_str($this->str_parse($story->{story}), SQL_REG);
+	$story->{headline} = $dbh->prepare_str($this->str_parse(
+				$story->{headline}, STR_NONE()), SQL_REG);
+	$story->{story} = $dbh->prepare_str($this->str_parse($story->{story}), SQL_REG);
 
 	# Build SQL
 	my $sql_fields = "";
 	my $sql_values = "";
 
 	my ($field, $field_id);
-	while (($field_id, $field) = each(%{ $this->{story_fields} }))
-	{
+	while (($field_id, $field) = each(%{ $this->{story_fields} })) {
 		$sql_fields .= " , ud_$field_id ";
 		$sql_values .= " , '$story->{$field_id}' ";
 	}
@@ -64,8 +61,7 @@ sub story_add
 
 	# Calculate story id only if it will be used
 	# (we're just guessing whether it will be used)
-	if ($this->event_has(EVT_STORY_ADD()))
-	{
+	if ($this->event_has(EVT_STORY_ADD())) {
 		$story->{story_id} = $dbh->last_insert_id;
 		$this->event_fire(EVT_STORY_ADD(), $story);
 	}
@@ -73,8 +69,7 @@ sub story_add
 	return (E_NONE(), []);
 }
 
-sub story_update
-{
+sub story_update {
 	my ($this, $story) = @_;
 	my $err = E_NONE();
 	my $dbh = $this->{dbh};
@@ -90,10 +85,9 @@ sub story_update
 	return ($err, $uerr) if $err != E_NONE() || @$uerr;
 
 	# Prepare data
-	$story->{headline}	= $dbh->prepare_str($this->str_parse(
-					$story->{headline}, STR_NONE()), SQL_REG);
-	$story->{story}		= $dbh->prepare_str($this->str_parse(
-					$story->{story}), SQL_REG);
+	$story->{headline} = $dbh->prepare_str($this->str_parse(
+				$story->{headline}, STR_NONE()), SQL_REG);
+	$story->{story} = $dbh->prepare_str($this->str_parse($story->{story}), SQL_REG);
 
 	# Build SQL
 	my $sql = "	UPDATE
@@ -103,8 +97,7 @@ sub story_update
 				mod_date	= NOW(), ";
 	
 	my ($field, $field_id);
-	while (($field_id, $field) = each(%{ $this->{story_fields} }))
-	{
+	while (($field_id, $field) = each(%{ $this->{story_fields} })) {
 		$sql .= "	ud_$field_id	= '$story->{$field_id}', ";
 	}
 
@@ -120,14 +113,12 @@ sub story_update
 	return (E_NONE(), []);
 }
 
-sub story_remove
-{
+sub story_remove {
 	my ($this, $story_id) = @_;
 	return FALSE() unless $story_id && $story_id =~ /^\d+$/;
 	my $dbh = $this->{dbh};
 
-	if ($this->event_has(EVT_STORY_REMOVE()))
-	{
+	if ($this->event_has(EVT_STORY_REMOVE())) {
 		# Only gather the story if it will be used
 		my $story = $this->story_get($story_id);
 		$this->event_fire(EVT_STORY_REMOVE(), $story);
@@ -148,8 +139,7 @@ sub story_remove
 # corresponding value so it can easily be reused
 # without worry of other components continually requesting
 # recentness.
-sub story_set_recent
-{
+sub story_set_recent {
 	my ($this, $story, $type) = @_;
 	return if defined $story->{is_recent};
 	$story->{is_recent} = FALSE();
@@ -169,10 +159,8 @@ sub story_set_recent
 				LIMIT
 					$this->{$type}", DB_COL);
 	my $id;
-	while (($id) = $this->{dbh}->fetch_row)
-	{
-		if ($id == $story->{story_id})
-		{
+	while (($id) = $this->{dbh}->fetch_row) {
+		if ($id == $story->{story_id}) {
 			# Requested story is a recent one
 			$story->{is_recent} = TRUE();
 			return;
@@ -181,8 +169,7 @@ sub story_set_recent
 	return;
 }
 
-sub story_get
-{
+sub story_get {
 	my ($this, $story_id) = @_;
 	return undef unless $this->story_exists($story_id);
 	my %story = $this->{dbh}->query("	SELECT
@@ -191,12 +178,10 @@ sub story_get
 							babs_stories
 						WHERE
 							story_id = $story_id", DB_ROW);
-	if (%story)
-	{
+	if (%story) {
 		my %s = ();
 		my ($k, $v);
-		while (($k, $v) = each(%story))
-		{
+		while (($k, $v) = each(%story)) {
 			# Strip `ud_' off of user-defined fields
 			$s{$k =~ /^ud_/ ? $' : $k} = $v;
 		}
@@ -219,8 +204,7 @@ sub story_get
 
 # Note: grabs top-level comments only
 # (that's all we need it for).
-sub story_get_comments
-{
+sub story_get_comments {
 	my ($this, $story_id) = @_;
 	return [] unless defined $story_id && $story_id =~ /^\d+$/;
 	my @ids = ();
@@ -236,8 +220,7 @@ sub story_get_comments
 	return \@ids;
 }
 
-sub story_exists
-{
+sub story_exists {
 	my ($this, $story_id) = @_;
 	return FALSE() unless $story_id && $story_id =~ /^\d+$/;
 	return $this->{dbh}->query("	SELECT

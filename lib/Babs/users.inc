@@ -9,8 +9,7 @@ use constant USER_LVL_COMMENTER	=> 1;
 use constant USER_LVL_REGULAR	=> 2;
 use constant USER_LVL_ADMIN	=> 3;
 
-sub _user_init
-{
+sub _user_init {
 	my ($this) = @_;
 	my $g = $this->{error_const_group};
 
@@ -23,8 +22,7 @@ sub _user_init
 	$g->add("E_USER_EXIST");	# Non-existant user
 }
 
-sub user_add
-{
+sub user_add {
 	my ($this, $user) = @_;
 	my $err = E_NONE();
 	my $dbh = $this->{dbh};
@@ -52,16 +50,15 @@ sub user_add
 	return ($err, $uerr) if $err != E_NONE() || @$uerr;
 
 	# Prepare data
-	$user->{email}		= $dbh->prepare_str($this->str_parse(
-					$user->{email}, STR_NONE()), SQL_REG);
-	$user->{password}	= $dbh->prepare_str($this->crypt($user->{password}), SQL_REG);
+	$user->{email} = $dbh->prepare_str($this->str_parse(
+				$user->{email}, STR_NONE()), SQL_REG);
+	$user->{password} = $dbh->prepare_str($this->crypt($user->{password}), SQL_REG);
 
 	my $sql_fields = "";
 	my $sql_values = "";
 
 	my ($field, $field_id);
-	while (($field_id, $field) = each(%{ $this->{user_fields} }))
-	{
+	while (($field_id, $field) = each(%{ $this->{user_fields} })) {
 		$sql_fields .= ", ud_$field_id";
 		$sql_values .= ", '$user->{$field_id}'";
 	}
@@ -84,8 +81,7 @@ sub user_add
 	return (E_NONE(), []);
 }
 
-sub user_update
-{
+sub user_update {
 	my ($this, $user) = @_;
 	my $err = E_NONE();
 	my $dbh = $this->{dbh};
@@ -110,10 +106,10 @@ Notes:
 	return ($err, $uerr) if $err != E_NONE() || @$uerr;
 
 	# Prepare data
-	$user->{email}		= $dbh->prepare_str($this->str_parse(
-					$user->{email}, STR_NONE()), SQL_REG);
-	$user->{password}	= $dbh->prepare_str($this->crypt($user->{password}),
-					SQL_REG) if $user->{password};
+	$user->{email} = $dbh->prepare_str($this->str_parse(
+				$user->{email}, STR_NONE()), SQL_REG);
+	$user->{password} = $dbh->prepare_str($this->crypt($user->{password}),
+				SQL_REG) if $user->{password};
 
 	# Build SQL
 	my $sql = "	UPDATE
@@ -140,8 +136,7 @@ Notes:
 	return (E_NONE(), []);
 }
 
-sub user_get_id
-{
+sub user_get_id {
 	my ($this, $username) = @_;
 	$username = $this->{dbh}->prepare_str($username, SQL_REG);
 	return $this->{dbh}->query("	SELECT
@@ -152,8 +147,7 @@ sub user_get_id
 						username = '$username'", DB_COL);
 }
 
-sub user_get
-{
+sub user_get {
 	my ($this, $user_id) = @_;
 	return undef unless $this->user_exists($user_id);
 	my %user = $this->{dbh}->query("	SELECT
@@ -162,12 +156,10 @@ sub user_get
 							babs_users
 						WHERE
 							user_id = $user_id", DB_ROW);
-	if (%user)
-	{
+	if (%user) {
 		my %u = ();
 		my ($k, $v);
-		while (($k, $v) = each(%user))
-		{
+		while (($k, $v) = each(%user)) {
 			# Strip `ud_' from each user-defined field
 			$u{$k =~ /^ud_/ ? $' : $k} = $v;
 		}
@@ -176,8 +168,7 @@ sub user_get
 	return \%user;
 }
 
-sub user_remove
-{
+sub user_remove {
 	my ($this, $user_id) = @_;
 	my $dbh = $this->{dbh};
 	return FALSE() unless defined $user_id && $user_id =~ /^\d+$/;
@@ -195,8 +186,7 @@ sub user_remove
 					user_id = $user_id", DB_NULL);
 }
 
-sub user_exists
-{
+sub user_exists {
 	my ($this, $user_id) = @_;
 	return FALSE() unless $user_id && $user_id =~ /^\d+$/;
 	return $this->{dbh}->query("	SELECT

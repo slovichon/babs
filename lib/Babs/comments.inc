@@ -4,8 +4,7 @@
 use DBH qw(:all);
 use strict;
 
-sub _comment_init
-{
+sub _comment_init {
 	my ($this) = @_;
 	my $g = $this->{error_const_group};
 
@@ -17,8 +16,7 @@ sub _comment_init
 	$g->add("E_COMMENT_MAX");	# Max comments reached
 }
 
-sub comment_add
-{
+sub comment_add {
 	my ($this, $comment) = @_;
 	my $dbh = $this->{dbh};
 	my $err = E_NONE();
@@ -63,8 +61,7 @@ sub comment_add
 	my $sql_values = "";
 
 	my ($field_id, $field);
-	while (($field_id, $field) = each( %{ $this->{comment_fields} } ))
-	{
+	while (($field_id, $field) = each( %{ $this->{comment_fields} } )) {
 		$comment->{$field_id} = $dbh->prepare_str($this->str_parse(
 						$comment->{$field_id}, $field->{parse}), SQL_REG);
 
@@ -105,8 +102,7 @@ sub comment_add
 	return (E_NONE(), []);
 }
 
-sub comment_update
-{
+sub comment_update {
 	my ($this, $comment) = @_;
 	my $dbh = $this->{dbh};
 	my $err = E_NONE();
@@ -122,7 +118,8 @@ sub comment_update
 	return ($err, $uerr) if $err != E_NONE() || @$uerr;
 
 	# Prepare data
-	$comment->{subject} = $dbh->prepare_str($this->str_parse($comment->{subject}, STR_NONE()), SQL_REG);
+	$comment->{subject} = $dbh->prepare_str($this->str_parse(
+				$comment->{subject}, STR_NONE()), SQL_REG);
 	$comment->{comment} = $dbh->prepare_str($this->str_parse($comment->{comment}), SQL_REG);
 
 	my $sql = "	UPDATE
@@ -150,8 +147,7 @@ sub comment_update
 	return (E_NONE(), []);
 }
 
-sub comment_remove
-{
+sub comment_remove {
 	my ($this, $story_id, $comment_id) = @_;
 	my $dbh = $this->{dbh};
 
@@ -174,10 +170,8 @@ sub comment_remove
 
 	# Create a list of parent => child comments
 	my ($i_id, $i_parent);
-	while (($i_id, $i_parent) = $dbh->fetch_row)
-	{
-		if (exists $all{$i_parent})
-		{
+	while (($i_id, $i_parent) = $dbh->fetch_row) {
+		if (exists $all{$i_parent}) {
 			push @{ $all{$i_parent} }, $i_id;
 		} else {
 			$all{$i_parent} = [$i_id];
@@ -187,19 +181,15 @@ sub comment_remove
 	# Select child comments of target
 	my ($i_children, $i_child);
 	my @targets = ();
-	while (($i_parent, $i_children) = each %all)
-	{
-		foreach $i_child (@$i_children)
-		{
-			if (in_array($comment_id, $this->comment_get_ancestors($i_child, \%all)))
-			{
+	while (($i_parent, $i_children) = each %all) {
+		foreach $i_child (@$i_children) {
+			if (in_array($comment_id, $this->comment_get_ancestors($i_child, \%all))) {
 				push @targets, $i_child;
 			}
 		}
 	}
 
-	foreach $i_id (@targets)
-	{
+	foreach $i_id (@targets) {
 		$this->event_fire(EVT_COMMENT_REMOVE(), $i_id);
 	}
 
@@ -231,12 +221,10 @@ sub comment_get
 						WHERE
 							story_id   = $story_id
 						AND	comment_id = $comment_id", DB_ROW);
-	if (%comment)
-	{
+	if (%comment) {
 		my %c = ();
 		my ($k, $v);
-		while (($k, $v) = each %comment)
-		{
+		while (($k, $v) = each %comment) {
 			# Strip `ud_' from each user-defined field
 			$c{$k =~ /^ud_/ ? $' : $k} = $v;
 		}
@@ -245,22 +233,18 @@ sub comment_get
 	return \%comment;
 }
 
-sub comment_get_ancestors
-{
+sub comment_get_ancestors {
 	my ($this, $needle, $hay) = @_;
 	my @ancestors = ($needle);
 	my $resume = TRUE();
 	my ($parent, $children, $child);
 
-	STARTOVER: while ($resume)
-	{
+STARTOVER:
+	while ($resume) {
 		$resume = FALSE();
-		while (($parent, $children) = each(%$hay))
-		{
-			foreach $child (@$children)
-			{
-				if ($child == $needle)
-				{
+		while (($parent, $children) = each(%$hay)) {
+			foreach $child (@$children) {
+				if ($child == $needle) {
 					push @ancestors, $parent;
 					# Find parent's parent
 					$needle = $parent;
@@ -274,8 +258,7 @@ sub comment_get_ancestors
 	return \@ancestors;
 }
 
-sub comment_exists
-{
+sub comment_exists {
 	my ($this, $comment_id) = @_;
 	return FALSE() unless $comment_id && $comment_id =~ /^\d+$/;
 	return $this->{dbh}->query("	SELECT

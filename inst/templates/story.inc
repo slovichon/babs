@@ -1,34 +1,35 @@
-<?php
-	$dbh		= newsys_get_dbh();
-	$path		= newsys_build_path();
-	$story_id	= $args[1];
-	$story		= newsys_story_get($dbh,$story_id);
+# $Id$
 
-	if (is_array($story))
-	{
-		$ts = new TimeStamp($story["create_date"]);
+our $story;
 
-		$date		= $ts->format(newsys_conf("time_format"));
-		$author_uri	= "$path/profile.php?user_id="			. $story["author_id"];
-		$edit_uri	= "$path/admin/story-edit.php?story_id="	. $story["story_id"];
-		$delete_uri	= "$path/admin/story-delete.php?story_id="	. $story["story_id"];
-		$author		= $dbh->query("	SELECT
-							username
-						FROM
-							newsys_users
-						WHERE
-							user_id = '{$story["author_id"]}'",DB_COL);
-		$comment_uri	= "#";
+$story = $babs->story_get($story_id);
 
-		if (newsys_conf("allow_comments"))
-			$comment_uri	= "$path/admin/com-add.php?story_id="		. $story["story_id"] . "&amp;parent_comment_id=0";
+if (ref $story eq "HASH") {
+	our ($date, $profile_url, $edit_url, $delete_url,
+	     $author, $comment_url, $headline, $overview);
 
-		$headline	= $story["headline"];
-		$overview	= $story["overview"];
-		$story		= $story["story"];
-
-		return TRUE;
+	$date = Timestamp->new($story->{create_date})->format($babs->{time_format});
+	$profile_url 	= $babs->build_url("profile", user_id => $story->{author_id});
+	$edit_url 	= $babs->build_url("admin/story-edit",   story_id => $story->{story_id});
+	$delete_url 	= $babs->build_url("admin/story-delete", story_id => $story->{story_id});
+	$author = $babs->{dbh}->query("
+			SELECT
+				username
+			FROM
+				babs_users
+			WHERE
+				user_id = " . $story->{author_id}, DB_COL);
+	if ($babs->{allow_comments}) {
+		$comment_url = $babs->build_url("admin/com-add",
+				story_id => $story->{story_id},
+				parent_comment_id => 0);
+	} else {
+		$comment_url = "#";
 	}
+	$headline	= $story->{headline};
+	$overview	= $story->{overview};
+	$story		= $story->{story};
+	return TRUE();
+}
 
-	return FALSE;
-?>
+return FALSE();

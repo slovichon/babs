@@ -5,7 +5,7 @@ use strict;
 
 my $babs = Babs->new(shift);
 my $of = $babs->{of};
-my $help_id = $babs->{isapi}->param('help_id') || 0;
+my $help_id = $babs->{req}->param('help_id') || 0;
 
 my ($title, @help) = @{{
 	101 => ["Error","No help information is available for this item."],

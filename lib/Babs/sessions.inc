@@ -34,8 +34,8 @@ sub session_require_login {
 	# Do login form show
 	if ($this->{auth_type} == AUTH_HTTP()) {
 		my $tried = 0;
-		if ($ENV{MOD_PERL}) {
-			my $auth = $this->{isapi}->header_in("Authorization");
+		if ($this->{req}) {
+			my $auth = $this->{req}->header_in("Authorization");
 			if ($auth =~ /Basic (.*)/) {
 				$tried = 1;
 				require MIME::Base64;
@@ -83,12 +83,12 @@ sub session_is_logged_in {
 	# to AUTH_TYPE and a valid session exists.
 	if ($this->{auth_type} == AUTH_HTTP()) {
 		my ($ret, $username, $password);
-		if ($ENV{MOD_PERL}) {
-			($ret, $password) = $this->{isapi}->get_basic_auth_pw;
+		if ($this->{req}) {
+			($ret, $password) = $this->{req}->get_basic_auth_pw;
 			return undef unless $ret == 0;
-			$username = $this->{isapi}->connection->user;
+			$username = $this->{req}->connection->user;
 		} else {
-			$username = $this->{isapi}->remote_user;
+			$username = $this->{cgi}->remote_user;
 		}
 	} elsif ($this->{auth_type} == AUTH_COOKIE()) {
 		my ($session_id, $session_key);

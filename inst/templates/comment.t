@@ -6,7 +6,7 @@
 		<td class="babsData1">
 			<span class="babsInfo">
 				Posted by
-				<a href="$author_uri">$author</a>
+				<a href="$author_url">$author</a>
 				on $date</span></td>
 	</tr>
 	<tr>
@@ -16,8 +16,8 @@
 	<tr>
 		<td class="babsFooter">
 			<span class="babsInfo">
-			<a href="$edit_uri">Edit</a> |
-			<a href="$delete_uri">Delete</a> |
-			<a href="$comment_uri">Comment</a></span></td>
+			<a href="$edit_url">Edit</a> |
+			<a href="$delete_url">Delete</a> |
+			<a href="$comment_url">Comment</a></span></td>
 	</tr>
 </table>

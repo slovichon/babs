@@ -1,4 +1,5 @@
 #!/usr/bin/perl -W
+# $Id$
 
 use Babs;
 use strict;
@@ -6,7 +7,7 @@ use strict;
 my $babs = Babs->new(shift);
 my $of = $babs->{of};
 
-my $user_id = $babs->{isapi}->param("user_id") || 0;
+my $user_id = $babs->request("user_id") || 0;
 
 if ($babs->user_exists($user_id))
 {

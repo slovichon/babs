@@ -1,13 +1,11 @@
 # Babs output-formatting routines
 # $Id$
 
+use POSIX ();
 use strict;
 
-use POSIX ();
-
 # Should this be a template?
-sub of_login_form
-{
+sub of_login_form {
 	my ($this) = @_;
 	my $of = $this->{of};
 
@@ -15,21 +13,19 @@ sub of_login_form
 	my $redirect = $this->post("babs_redirect");
 
 	# If there wasn't a failed login, then it was the referring page
-	$redirect = $this->{isapi}->referer unless $redirect;
+	$redirect = $this->{cgi}->referer unless $redirect;
 
 	# Only redirect if it's not the login page
 	$redirect = $redirect && $redirect eq $this->build_url("login") ?
-		$this->encode_html($redirect) : "";
-	
+		$this->{cgi}->escapeHTML($redirect) : "";
+
 	my $of_join = $this->{allow_join} ?
 		$of->link("Not a member?", $this->build_url("admin/user-add")) .
 		$of->br : "";
-	
-	return	$of->form
-		(
+
+	return	$of->form(
 			{action => $this->build_url("login-post")},
-			$of->table
-			(
+			$of->table(
 				{class => "babsTable"},
 				$of->table_row({class=>"babsHeader", colspan=>2, value=>"Log In"}),
 				$of->table_row({class=>"babsDesc", value=>"Username:"},
@@ -49,8 +45,7 @@ sub of_login_form
 		);
 }
 
-sub of_close_window
-{
+sub of_close_window {
 	my ($this, $title) = @_;
 
 	my $data = $this->encode_slashes($this->{of}->link(value=>$title,
@@ -61,8 +56,7 @@ sub of_close_window
 		"</script>";
 }
 
-sub of_popup
-{
+sub of_popup {
 	my ($this, $value, $href) = @_;
 	$href = $this->encode_slashes($href);
 	my $name = "babs" . $this->random_str(8, RAND_VIS_ALNUM());
@@ -71,8 +65,7 @@ sub of_popup
 }
 
 # Prevent multiple submissions
-sub of_js_pms
-{
+sub of_js_pms {
 	return qq<
 			if (this.value == 'Processing...')
 			{
@@ -82,11 +75,10 @@ sub of_js_pms
 				this.value = 'Processing...';
 				return true;
 			}
-		>;
+	>;
 }
 
-sub of_nav_menu
-{
+sub of_nav_menu {
 	my ($this, %prefs) = @_;
 	my $offset	= $prefs{offset} && $prefs{offset} =~ /^\d+$/ ? $prefs{offset} : 0;
 	my $total	= $prefs{total}  && $prefs{total}  =~ /^\d+$/ ? $prefs{total}  : 0;
@@ -97,19 +89,20 @@ sub of_nav_menu
 	my $output	= "";
 	my $of		= $this->{of};
 	$offset		= 0 if $offset >= $total;
-	if ($offset > $limit)
-	{
+
+	if ($offset > $limit) {
 		$output .=
 			$of->link("First",	$this->build_url($action, %url_prefs, offset=>0)) . " | " .
 			$of->link("Previous",	$this->build_url($action, %url_prefs, offset=>$offset-$limit)) . " | ";
 	} else {
 		$output .= "First | Previous ";
 	}
+
 	my $page	= POSIX::floor($offset / $limit);
 	my $last_page	= POSIX::ceil($total / $limit);
 	my $start	= 0;
-	if ($page < $plimit/2)
-	{
+
+	if ($page < $plimit/2) {
 		# The "left boundary" exists when we can't evenly
 		# distribute "previous page" links.
 		$start = 0;
@@ -120,22 +113,22 @@ sub of_nav_menu
 	} else {
 		$start = $page - floor($plimit/2);
 	}
-	for (my $i = $start; $i < $start + $plimit && $i < $last_page; $i++)
-	{
-		if ($i == $page)
-		{
+
+	for (my $i = $start; $i < $start + $plimit && $i < $last_page; $i++) {
+		if ($i == $page) {
 			$output .= $of->strong($i+1) . " | ";
 		} else {
 			$output .= $of->link($i+1, $this->build_url($action, %url_prefs, offset=>$i*$limit)) . " | ";
 		}
 	}
-	if ($offset + $limit < $total)
-	{
+
+	if ($offset + $limit < $total) {
 		$output .=	$of->link("Next", $this->build_url($action, %url_prefs, offset=>$offset+$limit)) . " | " .
 				$of->link("Last", $this->build_url($action, %url_prefs, offset=>$total-$limit));
 	} else {
 		$output .= "Next | Last";
 	}
+
 	return $output;
 }
 

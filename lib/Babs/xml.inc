@@ -7,67 +7,55 @@ use strict;
 use constant XML_STORY_RECENT	=> 1;
 use constant XML_STORY_ARCHIVES	=> 2;
 
-sub _xml_init
-{
+sub _xml_init {
 	my $this = shift;
 	$this->{xp} = XML::DOM::Parser->new();
 	return;
 }
 
-sub _xml_cleanup
-{
+sub _xml_cleanup {
 	my $this = shift;
 }
 
-sub xml_getfile
-{
+sub xml_getfile {
 	my ($this, $type) = @_;
 	$type = -1 unless defined $type;
-	if ($type < 0 || $type >= @{ $this->{xml_files} })
-	{
+	if ($type < 0 || $type >= @{ $this->{xml_files} }) {
 		$this->throw("Unrecognized XML file type; type: $type")
 	}
 	return $this->{xml_files}[$type];
 }
 
-sub xml_openfile
-{
+sub xml_openfile {
 	my ($this, $type) = @_;
 	my $file = $this->xml_getfile($type);
 	return -f $file ? $this->{xp}->parsefile($file) : $this->xml_setup($type);
 }
 
-sub xml_writefile
-{
+sub xml_writefile {
 	my ($this, $type, $doc) = @_;
 	my $file = $this->xml_getfile($type);
 	$doc->printToFile($file);
 	#$doc->dispose;
 }
 
-sub xml_update
-{
+sub xml_update {
 	my ($this, $type, $data, $doc) = @_;
-	if ($type == XML_STORY_RECENT || $type == XML_STORY_ARCHIVES)
-	{
+	if ($type == XML_STORY_RECENT || $type == XML_STORY_ARCHIVES) {
 		# Here, we have to find the <item> corresponding
 		# to our story and update its contents if it's recent.
 		$this->story_set_recent($data);
-		if ($data->{is_recent})
-		{
+		if ($data->{is_recent}) {
 			my $items = $doc->getElementsByTagName("item");
 			my $count = $items->getLength;
 			my ($item);
 			# Loop through <item>s
-			for (my $i = 0; $i < $count; $i++)
-			{
+			for (my $i = 0; $i < $count; $i++) {
 				my $item = $items->item($i);
 				my $about = $item->getAttribute("rdf:about");
-				if ($about =~ /\?story_id=(\d+)$/)
-				{
+				if ($about =~ /\?story_id=(\d+)$/) {
 					# Check if story at hand is story in question
-					if ($1 == $data->{story_id})
-					{
+					if ($1 == $data->{story_id}) {
 						my %map = (
 							"babs:ts"	=> "date",
 							description	=> "story",
@@ -75,8 +63,7 @@ sub xml_update
 						);
 						# Update timestamp, description, title
 						my ($tag, $field, $n, $children);
-						while (($tag, $field) = each %map)
-						{
+						while (($tag, $field) = each %map) {
 							$n = $doc->createElement($tag);
 							$n->setNodeValue($data->{$field});
 							$children = $item->getElementsByTagName($tag);
@@ -95,11 +82,9 @@ sub xml_update
 	}
 }
 
-sub xml_add
-{
+sub xml_add {
 	my ($this, $type, $data, $doc) = @_;
-	if ($type == XML_STORY_RECENT)
-	{
+	if ($type == XML_STORY_RECENT) {
 		# We might have to replace the most-dated story
 		my $items	= $doc->getElementsByTagName("item");
 		my $count	= $items->getLength;
@@ -110,10 +95,10 @@ sub xml_add
 
 		$item_node->setAttribute("rdf:about", $url);
 
-		my $item_title_node	= $doc->createElement("title");
-		my $item_link_node	= $doc->createElement("link");
-		my $item_ts_node	= $doc->createElement("babs:ts");
-		my $item_desc_node	= $doc->createElement("description");
+		my $item_title_node = $doc->createElement("title");
+		my $item_link_node  = $doc->createElement("link");
+		my $item_ts_node    = $doc->createElement("babs:ts");
+		my $item_desc_node  = $doc->createElement("description");
 
 		$item_title_node->setNodeValue($data->{headline});
 		$item_link_node	->setNodeValue($url);
@@ -129,21 +114,18 @@ sub xml_add
 		my $li_node = $doc->createElement("rdf:li");
 		$li_node->setAttribute("rdf:resource", $url);
 
-		if ($count >= $max)
-		{
+		if ($count >= $max) {
 			# Find most-dated story. Note that we start
 			# out with the current date, as every story
 			# should be older than it.
 			my $oldest = $data->{date};
 			my $oldnode = undef;
 			my ($t, $ts, $item);
-			for (my $i = 0; $i < $count; $i++)
-			{
+			for (my $i = 0; $i < $count; $i++) {
 				$item = $items->item($i);
 				$ts = $item->getElementsByTagName("babs:ts")->item(0);
 				$t = $ts->getNodeValue;
-				if ($t < $oldest)
-				{
+				if ($t < $oldest) {
 					$oldest = $t;
 					$oldnode = $item;
 				}
@@ -156,11 +138,9 @@ sub xml_add
 			my $li_count = $li_nodes->getLength;
 			$this->xml_throw($type) unless $li_count;
 			my $li_oldnode;
-			for (my $i = 0; $i < $li_count; $i++)
-			{
+			for (my $i = 0; $i < $li_count; $i++) {
 				$li_oldnode = $li_nodes->item($i);
-				if ($li_oldnode->getAttribute("rdf:resource") eq $oldurl)
-				{
+				if ($li_oldnode->getAttribute("rdf:resource") eq $oldurl) {
 					$li_oldnode->getParentNode->replaceChild($li_node, $li_oldnode);
 					last;
 				}
@@ -178,15 +158,15 @@ sub xml_add
 
 		$newnode->setAttribute("rdf:about", $url);
 
-		my $newnode_title	= $doc->createElement("title");
-		my $newnode_link	= $doc->createElement("link");
-		my $newnode_ts		= $doc->createElement("babs:ts");
-		my $newnode_desc	= $doc->createElement("description");
+		my $newnode_title = $doc->createElement("title");
+		my $newnode_link  = $doc->createElement("link");
+		my $newnode_ts	  = $doc->createElement("babs:ts");
+		my $newnode_desc  = $doc->createElement("description");
 
 		$newnode_title->setNodeValue($data->{headline});
-		$newnode_link->setNodeValue($url);
-		$newnode_ts->setNodeValue($data->{date});
-		$newnode_desc->setNodeValue($data->{story});
+		$newnode_link-> setNodeValue($url);
+		$newnode_ts->   setNodeValue($data->{date});
+		$newnode_desc-> setNodeValue($data->{story});
 
 		$newnode->appendChild($newnode_title);
 		$newnode->appendChild($newnode_link);
@@ -200,13 +180,10 @@ sub xml_add
 	}
 }
 
-sub xml_remove
-{
+sub xml_remove {
 	my ($this, $type, $data, $doc) = @_;
-	if ($type == XML_STORY_RECENT || $type == XML_STORY_ARCHIVES)
-	{
-		if ($type == XML_STORY_RECENT)
-		{
+	if ($type == XML_STORY_RECENT || $type == XML_STORY_ARCHIVES) {
+		if ($type == XML_STORY_RECENT) {
 			$this->story_set_recent($data);
 			return unless $data->{is_recent};
 		}
@@ -214,13 +191,10 @@ sub xml_remove
 		my $count = $items->getLength;
 		my ($item, $oldurl, $url);
 		# Remove <item>
-		for (my $i = 0; $i < $count; $i++)
-		{
+		for (my $i = 0; $i < $count; $i++) {
 			$item = $items->item($i);
-			if ($item->getAttribute("rdf:about") =~ /\?story_id=(\d+)$/)
-			{
-				if ($1 == $data->{story_id})
-				{
+			if ($item->getAttribute("rdf:about") =~ /\?story_id=(\d+)$/) {
+				if ($1 == $data->{story_id}) {
 					$url = $item->getAttribute("rdf:about");
 					$item->getParentNode->removeChild($item);
 					last;
@@ -234,11 +208,9 @@ sub xml_remove
 		$count = $lis->getLength;
 		my ($li, $found) = (undef, FALSE());
 		# Remove <rdf:li>
-		for (my $i = 0; $i < $count; $i++)
-		{
+		for (my $i = 0; $i < $count; $i++) {
 			$li = $lis->item($i);
-			if ($li->getAttribute("rdf:resource") eq $url)
-			{
+			if ($li->getAttribute("rdf:resource") eq $url) {
 				$found = TRUE();
 				$li->getParentNode->removeChild($li);
 				last;
@@ -250,17 +222,14 @@ sub xml_remove
 	}
 }
 
-sub xml_throw
-{
+sub xml_throw {
 	my ($this, $type) = @_;
 	$this->throw("Malformed XML data; file: " . $this->xml_getfile($type));
 }
 
-sub xml_setup
-{
+sub xml_setup {
 	my ($this, $type) = @_;
-	if ($type == XML_STORY_RECENT || $type == XML_STORY_ARCHIVES)
-	{
+	if ($type == XML_STORY_RECENT || $type == XML_STORY_ARCHIVES) {
 		my $doc = XML::DOM::Document->new;
 
 		my $rdf_node = $doc->createElement("rdf:RDF");

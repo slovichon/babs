@@ -4,6 +4,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 	<head>
 		<title>$title</title>
-		<link rel="stylesheet" type="text/css" href="$css_path" media="screen" />
+		<link rel="stylesheet" type="text/css" href="$css" media="screen" />
 	</head>
 	<body>

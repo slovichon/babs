@@ -1,34 +1,33 @@
-<?php
-	$dbh		= newsys_get_dbh();
-	$path		= newsys_build_path();
-	$story_id	= $args[1];
-	$story		= newsys_story_get($dbh,$story_id);
+# $Id$
 
-	if (is_array($story))
-	{
-		$ts = new TimeStamp($story["create_date"]);
+my $story = $babs->story_get($story_id);
 
-		$date		= $ts->format(newsys_conf("time_format"));
-		$num_words	= preg_match_all("/\w+/",newsys_str_parse($story["story"],NEWSYS_STR_NONE),$matches);
-		$num_comments	= $dbh->query("	SELECT
-							COUNT(*)
-						FROM
-							newsys_comments
-						WHERE
-							story_id = '{$story["story_id"]}'",DB_COL);
-		$author		= $dbh->query("	SELECT
-								username
-							FROM
-								newsys_users
-							WHERE
-								user_id = '{$story["author_id"]}'",DB_COL);
-		$profile_uri	= "$path/profile.php?user_id=" . $story["author_id"];
-		$story_uri	= "$path/view.php?story_id="   . $story["story_id"];
-		$headline	= $story["headline"];
-		$overview	= $story["overview"];
+if (ref $story eq "HASH") {
+	our ($date, $words, $comments, $author, $profile_url,
+	     $story_url, $headline, $overview);
 
-		return TRUE;
-	}
+	$date 	= Timestamp->new($story->{"create_date"})->format($babs->{time_format});
+	$words	= ($babs->str_parse($story->{story}, Babs::STR_NONE()) =~ /\w+/g);
+	$comments = $babs->{dbh}->query("
+			SELECT
+				COUNT(*)
+			FROM
+				babs_comments
+			WHERE
+				story_id = " . $story->{story_id}, DB_COL);
+	$author = $babs->{dbh}->query("
+			SELECT
+				username
+			FROM
+				babs_users
+			WHERE
+				user_id = " . $story->{author_id}, DB_COL);
+	$profile_url	= $babs->build_url("profile", user_id => $story->{author_id});
+	$story_url	= $babs->build_url("view", story_id => $story->{story_id});
+	$headline	= $story->{headline};
+	$overview	= $story->{overview};
 
-	return FALSE;
-?>
+	return TRUE();
+}
+
+return FALSE();

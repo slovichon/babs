@@ -10,18 +10,16 @@ use DBH qw(:all);
 use Storable;
 use strict;
 
-use constant FLD_USER		=> 1;
-use constant FLD_STORY		=> 2;
-use constant FLD_COMMENT	=> 3;
+use constant FLD_USER	 => 1;
+use constant FLD_STORY	 => 2;
+use constant FLD_COMMENT => 3;
 
-sub _udf_init
-{
+sub _udf_init {
 	my $this = shift;
-	$this->udf_update unless $this->{skip_init};
+	$this->udf_update() unless exists $this->{skip_init} && $this->{skip_init};
 }
 
-sub udf_validate
-{
+sub udf_validate {
 	my ($this, $type, $data) = @_;
 	my @errs = ();
 	my %flds = ();
@@ -33,35 +31,42 @@ sub udf_validate
 
 	$this->throw("Unrecognized field type; type: $type") unless exists $map{$type};
 
-	# We will process all items and generate
-	# as much error information as possible
-	# in hopes that the user will not multiply
-	# submit data, correcting errors only one
+	# We will process all items and generate as much error
+	# information as possible in hopes that the user will
+	# not multiply submit data, correcting errors only one
 	# at a time.
+	#
+	# This setup requires that if a field is required and
+	# does not provide a validation pattern (implying a
+	# non-empty field), the `validation' value must take
+	# on qr//;
 	my ($field_id, $field);
-	while (($field_id, $field) = each %{ $this->{$map{$type}} })
-	{
-		if ($field->{validation})
-		{
-			unless ($data->{$field_id} =~ $field->{validation})
-			{
-				if ($field->{required})
-				{
+	while (($field_id, $field) = each %{ $this->{$map{$type}} }) {
+		if ($field->{validation}) {
+			unless (exists $data->{$field_id} && $data->{$field_id} &&
+				$data->{$field_id} =~ $field->{validation}) {
+				if ($field->{required}) {
 					push @errs, $field_id;
 				} else {
 					$data->{$field_id} = $field->{default_value};
 				}
 			}
 		}
+
+		# No need in preparing data if an
+		# error occurred.
+		unless (@errs) {
+			$data->{$field_id} = $this->str_parse(
+				$data->{$field_id}, $field->{parse});
+		}
 	}
 
-	return @errs;
+	return \@errs;
 }
 
 # Checks to see if the user-defined fields fingerprints
 # have changed and updates the structures accordingly.
-sub udf_update
-{
+sub udf_update {
 	my $this = shift;
 	my $change = FALSE();
 	my %old_types;
@@ -75,12 +80,17 @@ sub udf_update
 					FROM
 						babs_config", DB_ROW);
 	my ($field_id, $field_sig, $old_fields);
-	while (($field_id, $field_sig) = each %old_types)
-	{
-		$old_fields = Storable::thaw($field_sig);
+	while (($field_id, $field_sig) = each %old_types) {
+		eval {
+			$old_fields = Storable::thaw($field_sig);
+		};
+		if ($@) {
+			$old_fields = {};
+			# Reset for future use
+			$@ = "";
+		}
 		$old_fields = {} unless ref $old_fields eq "HASH";
-		if (hasheq($old_fields, $this->{$field_id}))
-		{
+		if ($this->hasheq($old_fields, $this->{$field_id})) {
 			$change = TRUE();
 			$changed{$field_id} = $old_fields;
 		}
@@ -89,10 +99,8 @@ sub udf_update
 	$this->udf_update_db(\%changed) if $change;
 }
 
-# An update has occured, write the new structure out
-# to the database.
-sub udf_update_db
-{
+# An update has occured, write the new structure out to the database.
+sub udf_update_db {
 	my ($this, $changed) = @_;
 	my $dbh = $this->{dbh};
 
@@ -103,22 +111,19 @@ sub udf_update_db
 		comment_fields	=> "babs_comments",
 	);
 
-	my ($id, $fields, @removed, %diff, $field_id,
-		$field, $new_field_id, $new_field,
-		$old_fields, %sigs);
+	my ($id, @removed, %diff, $field_id, $field,
+	    $new_field_id, $new_field, $old_fields, %sigs);
 
-	while (($id, $old_fields) = each %$changed)
-	{
+	while (($id, $old_fields) = each %$changed) {
 		# Removed fields
 		@removed = ();
 
 		# "Difference" fields (i.e., new fields)
 		%diff = %{ $this->{$id} };
 
-		while (($field_id, $field) = each %$old_fields)
-		{
-			if (exists $diff{$field_id} && hasheq($diff{$field_id}, $field))
-			{
+		while (($field_id, $field) = each %$old_fields) {
+			if (exists $diff{$field_id} &&
+			    $this->hasheq($diff{$field_id}, $field)) {
 				# Field exists in both; remove
 				delete $diff{$field_id};
 			} else {
@@ -128,8 +133,7 @@ sub udf_update_db
 		}
 
 		# Removed dropped fields
-		foreach (@removed)
-		{
+		foreach (@removed) {
 			$dbh->query("	ALTER TABLE
 						$map{$id}
 					DROP
@@ -137,8 +141,7 @@ sub udf_update_db
 		}
 
 		# Add new fields
-		while (($new_field_id, $new_field) = each %diff)
-		{
+		while (($new_field_id, $new_field) = each %diff) {
 			$dbh->query("	ALTER TABLE
 						$map{$id}
 					ADD
@@ -153,15 +156,14 @@ sub udf_update_db
 	if ($dbh->query("	SELECT
 					COUNT(*)
 				FROM
-					babs_config", DB_COL))
-	{
+					babs_config", DB_COL)) {
 		# Already exists; update
 		$dbh->query("	UPDATE
 					babs_config
 				SET
-					user_fields_sig		= '$sigs{user_fields}',
-					story_fields_sig	= '$sigs{story_fields}',
-					comment_fields_sig	= '$sigs{comment_fields}'", DB_NULL);
+					user_fields_sig	   = '$sigs{user_fields}',
+					story_fields_sig   = '$sigs{story_fields}',
+					comment_fields_sig = '$sigs{comment_fields}'", DB_NULL);
 	} else {
 		# Doesn't exist; insert
 		$dbh->query("	INSERT INTO

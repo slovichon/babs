@@ -11,19 +11,16 @@ use constant CRYPT_EXT_DES	=> 2;
 use constant CRYPT_MD5		=> 3;
 use constant CRYPT_BLOWFISH	=> 4;
 
-sub crypt
-{
+sub crypt {
 	my ($this, $data) = @_;
 	return crypt($data, $this->{crypt_key});
 }
 
-sub rand_str
-{
+sub rand_str {
 	my ($this, $size, $type) = @_;
 	$type = RAND_VIS_NQ unless defined $type;
 	my ($min, $max, @excluded);
-	if ($type == RAND_VIS_NQ)
-	{
+	if ($type == RAND_VIS_NQ) {
 		$min = 33;
 		$max = 126;
 		@excluded = (34, 39, 92); # ' " \
@@ -38,8 +35,7 @@ sub rand_str
 	my $str = "";
 	my $ch = "";
 
-	for (1 .. $size)
-	{
+	for (1 .. $size) {
 		do {
 			$ch = $min + int rand($max-$min+1);
 		} while (in_array($ch, \@excluded));
@@ -49,8 +45,7 @@ sub rand_str
 	return $str;
 }
 
-sub gen_key
-{
+sub gen_key {
 	my ($this, $ktype) = @_;
 	my %map = (
 		CRYPT_DES       => {len=>2,  type=>RAND_VIS_NQ, prefix=>''},

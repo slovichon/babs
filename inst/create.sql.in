@@ -3,8 +3,7 @@
 
 DROP TABLE IF EXISTS babs_users;
 
-CREATE TABLE babs_users
-(
+CREATE TABLE babs_users (
 	user_id				@@USERS@@INT			NOT NULL	AUTO_INCREMENT,
 	username			VARCHAR(@@USERNAME_LEN@@)	NOT NULL,
 /*
@@ -33,8 +32,7 @@ CREATE TABLE babs_users
 
 DROP TABLE IF EXISTS babs_stories;
 
-CREATE TABLE babs_stories
-(
+CREATE TABLE babs_stories (
 	story_id	@@STORIES@@INT			NOT NULL	AUTO_INCREMENT,
 	author_id	@@USERS@@INT			NOT NULL,
 	headline	VARCHAR(@@HEADLINE_LEN@@)	NOT NULL,
@@ -53,8 +51,7 @@ CREATE TABLE babs_stories
 
 DROP TABLE IF EXISTS babs_comments;
 
-CREATE TABLE babs_comments
-(
+CREATE TABLE babs_comments (
 	story_id		@@STORIES@@INT			NOT NULL,
 	comment_id		@@COMMENTS@@INT			NOT NULL,
 	author_id		@@USERS@@INT			NOT NULL,
@@ -73,8 +70,7 @@ CREATE TABLE babs_comments
 DROP TABLE IF EXISTS babs_config;
 
 /* "Variables" in RDBMSs are not portable */
-CREATE TABLE babs_config
-(
+CREATE TABLE babs_config (
 	crypt_key_sig		VARCHAR(@@CRYPT_KEY_LEN@@),
 
 	user_fields_sig		TEXT,
@@ -83,8 +79,7 @@ CREATE TABLE babs_config
 );
 
 /* First user */
-INSERT INTO babs_users
-(
+INSERT INTO babs_users (
 	username,
 	password,
 	email,

@@ -1,6 +1,7 @@
-<?php
-	$path		= newsys_build_path();
-	$css_path	= $path . "/default.css";
+# $Id$
 
-	return TRUE;
-?>
+our $css;
+
+$css = $babs->build_url("default.css");
+
+return TRUE();

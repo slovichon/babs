@@ -1,50 +1,47 @@
-<?php
-	$dbh		= newsys_get_dbh();
-	$path		= newsys_build_path();
-	$user_id	= $args[1];
-	$user		= newsys_user_get($dbh,$user_id);
+# $Id$
 
-	if (is_array($user))
-	{
-		$newsys_levels		= newsys_conf("levels");
-		$email			= preg_replace("/@/","&lt;at&gt;",$user["email"]);
-		$type			= $newsys_levels[$user["type"]];
-		$num_stories		= $dbh->query("	SELECT
-								COUNT(*)
-							FROM
-								newsys_stories
-							WHERE
-								author_id = {$user["user_id"]}",DB_COL);
+my $user = $babs->user_get($user_id);
 
-		$last_story		= $dbh->query("	SELECT
-								story_id,
-								create_date,
-								headline
-							FROM
-								newsys_stories
-							WHERE
-								author_id = {$user["user_id"]}
-							ORDER BY
-								create_date DESC
-							LIMIT
-								1",DB_ROW);
+if (ref $user eq "HASH") {
+	our ($type, $email, $stories, $last_story_headline, $username);
 
-
-		if (is_array($last_story))
-		{
-			$ts			= new TimeStamp($last_story["create_date"]);
-			$last_story_uri		= "$path/view.php?story_id=" . $last_story["story_id"];
-			$last_story_date	= $ts->format(newsys_conf("time_format"));
-			$last_story		= "<a href=\"{$last_story_uri}\">{$last_story["headline"]}</a> " .
-							"posted on $last_story_date";
-		} else {
-			$last_story		= "Never";
-		}
-
-		$username		= $user["username"];
-
-		return TRUE;
+	$type = $babs->{levels}[$user->{type}];
+	$email = $babs->{of}->email($user->{email});
+	$stories = $babs->{dbh}->query("
+			SELECT
+				COUNT(*)
+			FROM
+				babs_stories
+			WHERE
+				author_id = " . $user->{user_id}, DB_COL);
+	my $last_story = $babs->{dbh}->query("
+				SELECT
+					story_id,
+					create_date,
+					headline
+				FROM
+					babs_stories
+				WHERE
+					author_id = " . $user->{user_id} . "
+				ORDER BY
+					create_date DESC
+				LIMIT
+					1 ", DB_ROW);
+	
+	if (ref $last_story eq "HASH") {
+		my $last_story_date = Timestamp->new($last_story->{create_date})->format(
+					$babs->{time_format});
+		my $last_story_url = $babs->build_path("view",
+					story_id => $last_story->{story_id});
+		$last_story_headline = $babs->{of}->link("&quot;$last_story_headline&quot; " .
+					"posted on $last_story_date");
+	} else {
+		$last_story_headline = "Never";
 	}
 
-	return FALSE;
-?>
+	$username = $user->{username};
+
+	return TRUE();
+}
+
+return FALSE();

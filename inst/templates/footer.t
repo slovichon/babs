@@ -1,5 +1,4 @@
 		<hr />
-		<a href="$site_uri">
-			Return To Main $site_name Site</a>
+		<a href="$site_url">$site_name Home</a>
 	</body>
 </html>

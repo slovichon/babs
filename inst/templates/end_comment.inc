@@ -1,3 +1,3 @@
-<?php
-	return TRUE;
-?>
+# $Id$
+
+return TRUE();

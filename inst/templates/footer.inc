@@ -1,6 +1,6 @@
-<?php
-	$site_name	= newsys_conf("site_name");
-	$site_uri	= newsys_conf("site_uri");
+# $Id$
 
-	return TRUE;
-?>
+our $site_name = $babs->{site_name};
+our $site_url  = $babs->{site_uri};
+
+return TRUE();
