@@ -18,3 +18,4 @@ set $babs->{session_id} in require_login() or perhaps __session_init()
 add template parsing option "simple variables only" ::= '$' \w+
 convert DBH -> DBI (remove DBH dependence)
 provide a pretty page for when statements such as "use ..." or compile errors occur
+on user-input <pre> sections, distribute newlines like spaces are in run-on words
