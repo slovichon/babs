@@ -1,4 +1,4 @@
-# str.inc - Babs string routines
+# Babs string routines
 # $Id$
 
 sub encode_http
@@ -44,6 +44,20 @@ sub decode_html
 	);
 	$data =~ s/\$#(\d+);/chr($1)/ge;
 	$data =~ s/&(.*);/exists $tbl{$1} ? $tbl{$1} : $&/ge;
+	return $data;
+}
+
+sub encode_slashes
+{
+	my ($this, $data) = @_;
+	$data =~ s/['"\\]/\\$&/g;
+	return $data;
+}
+
+sub decode_slashes
+{
+	my ($this, $data) = @_;
+	$data =~ s/(?<=\\)['"\\]/$&/g;
 	return $data;
 }
 
