@@ -132,4 +132,12 @@ sub of_nav_menu {
 	return $output;
 }
 
+sub of_error {
+	my ($this, $msg) = @_;
+	print 	$this->header("Error"),
+		$this->{of}->p($msg),
+		$this->footer();
+	exit 0;
+}
+
 return TRUE();
