@@ -7,6 +7,7 @@ use OF;
 use DBH qw(:all);
 use Exporter;
 use Thraxx;
+use AutoConstantGroup;
 
 BEGIN {
 	if ($ENV{MOD_PERL})
@@ -86,8 +87,11 @@ sub construct
 	$prefs{wasp}->throw("No DBH specified")		unless $prefs{dbh};
 	$prefs{wasp}->throw("No OF specified")		unless $prefs{of};
 
+	# Set other properties
+	$prefs{error_const_group} = AutoConstantGroup->new;
+
 	# Strict-preference setting
-	tie %prefs, 'Babs::Prefs', %prefs unless tied $prefs;
+	tie %prefs, 'Babs::Prefs', %prefs unless tied %prefs;
 
 	# Fill up %prefs
 	my ($path) = ($INC{'Babs.pm'} =~ m!(.*/)!);
@@ -96,8 +100,11 @@ sub construct
 	my $this = bless \%prefs, ref($class) || $class;
 
 	# Propagate construction
-	$this->_xml_init();
+	$this->_comment_init();
+	$this->_stories_init();
 	$this->_udf_init();
+	$this->_users_init();
+	$this->_xml_init();
 
 	# Property initialization
 	$this->{gen_class} = 0;
