@@ -24,9 +24,9 @@ sub udf_validate
 	my @errs = ();
 	my %flds = ();
 	my %map = (
-		FLD_USER	=> "user_fields",
-		FLD_STORY	=> "story_fields",
-		FLD_COMMENT	=> "comment_fields",
+		FLD_USER()	=> "user_fields",
+		FLD_STORY()	=> "story_fields",
+		FLD_COMMENT()	=> "comment_fields",
 	);
 
 	$this->throw("Unrecognized field type; type: $type") unless exists $map{$type};
@@ -61,7 +61,7 @@ sub udf_validate
 sub udf_update
 {
 	my $this = shift;
-	my $change = Babs::FALSE;
+	my $change = FALSE();
 	my %old_types;
 	my %changed = ();
 
@@ -79,7 +79,7 @@ sub udf_update
 		$old_fields = {} unless ref $old_fields eq "HASH";
 		if (hasheq($old_fields, $this->{$field_id}))
 		{
-			$change = Babs::TRUE;
+			$change = TRUE();
 			$changed{$field_id} = $old_fields;
 		}
 	}
@@ -176,4 +176,4 @@ sub udf_update_db
 	}
 }
 
-return Babs::TRUE;
+return TRUE();

@@ -61,4 +61,4 @@ sub gen_key
 		$this->rand_str($map{$ktype}{len}, $map{$ktype}{type});
 }
 
-return Babs::TRUE;
+return TRUE();

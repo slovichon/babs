@@ -63,7 +63,7 @@ sub of_popup
 {
 	my ($this, $value, $href) = @_;
 	$href = $this->encode_slashes($href);
-	my $name = "babs" . $this->random_str(8, Babs::RAND_VIS_ALNUM);
+	my $name = "babs" . $this->random_str(8, RAND_VIS_ALNUM());
 	return $this->{of}->link(value=>$value, href=>$href,
 		onclick=>"window.open('$href', '$name', 'width=500,height=300'); return false;");
 }
@@ -137,4 +137,4 @@ sub of_nav_menu
 	return $output;
 }
 
-return Babs::TRUE;
+return TRUE();

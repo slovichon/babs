@@ -15,7 +15,6 @@ sub _xml_init
 sub _xml_cleanup
 {
 	my $this = shift;
-	$this->{xp}->dispose;
 }
 
 sub xml_getfile
@@ -41,6 +40,7 @@ sub xml_writefile
 	my ($this, $type, $doc) = @_;
 	my $file = $this->xml_getfile($type);
 	$doc->printToFile($file);
+	#$doc->dispose;
 }
 
 sub xml_update
@@ -101,7 +101,7 @@ sub xml_add
 		# We might have to replace the most-dated story
 		my $items	= $doc->getElementsByTagName("item");
 		my $count	= $items->getLength;
-		my $url		= $this->build_url(PATH_ABS, "view", story_id=>$data->{story_id});
+		my $url		= $this->build_url(PATH_ABS(), "view", story_id=>$data->{story_id});
 
 		# Build <item>
 		my $item_node = $doc->createElement("item");
@@ -172,7 +172,7 @@ sub xml_add
 		}
 	} elsif ($type == XML_STORY_ARCHIVES) {
 		my $newnode = $doc->createElement("item");
-		my $url = $this->build_url(PATH_ABS, "view", story_id=>$data->{story_id});
+		my $url = $this->build_url(PATH_ABS(), "view", story_id=>$data->{story_id});
 
 		$newnode->setAttribute("rdf:about", $url);
 
@@ -227,17 +227,17 @@ sub xml_remove
 				$this->xml_throw($type);
 			}
 		}
-		return FALSE unless defined $oldurl;
+		return FALSE() unless defined $oldurl;
 		my $lis = $doc->getElementsByTagName("rdf:li");
 		$count = $lis->getLength;
-		my ($li, $found) = (undef, FALSE);
+		my ($li, $found) = (undef, FALSE());
 		# Remove <rdf:li>
 		for (my $i = 0; $i < $count; $i++)
 		{
 			$li = $lis->item($i);
 			if ($li->getAttribute("rdf:resource") eq $url)
 			{
-				$found = TRUE;
+				$found = TRUE();
 				$li->getParentNode->removeChild($li);
 				last;
 			}
@@ -295,4 +295,4 @@ sub xml_setup
 	}
 }
 
-return Babs::TRUE;
+return TRUE();

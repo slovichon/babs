@@ -6,44 +6,51 @@ use constant USER_LVL_COMMENTER	=> 1;
 use constant USER_LVL_REGULAR	=> 2;
 use constant USER_LVL_ADMIN	=> 3;
 
-# User errors
-use constant E_USER_NAME	=> (001<<7); # Invalid username
-use constant E_USER_NAME_USE	=> (002<<7); # Username already in use
-use constant E_USER_PASS	=> (004<<7); # Invalid password
-use constant E_USER_EMAIL	=> (010<<7); # Invalid e-mail address
-use constant E_USER_TYPE	=> (020<<7); # Invalid user type
-use constant E_USER_EXIST	=> (040<<7); # Non-existant user
+sub _user_init
+{
+	my ($this) = @_;
+	my $g = $this->{error_const_group};
+
+	# User errors
+	$g->add("E_USER_NAME");		# Invalid username
+	$g->add("E_USER_NAME_USE");	# Username already in use
+	$g->add("E_USER_PASS");		# Invalid password
+	$g->add("E_USER_EMAIL");	# Invalid e-mail address
+	$g->add("E_USER_TYPE");		# Invalid user type
+	$g->add("E_USER_EXIST");	# Non-existant user
+}
 
 sub user_add
 {
 	my ($this, $user) = @_;
-	my $err = Babs::E_NONE;
+	my $err = E_NONE();
 	my $dbh = $this->{dbh};
 
 	# Validate info
-	$err |= E_USER_NAME	unless $user->{username} && $user->{username} =~ /^[a-zA-Z0-9_-]{4,30}$/;
-	$err |= E_USER_PASS	unless $user->{password} && length($user->{password}) < 6;
-	$err |= E_USER_EMAIL	unless $this->valid_email($user->{email});
-	$err |= E_USER_TYPE	unless $user->{type} && $user->{type} =~ /^\d+$/;
+	$err |= E_USER_NAME()	unless $user->{username} && $user->{username} =~ /^[a-zA-Z0-9_-]{4,30}$/;
+	$err |= E_USER_PASS()	unless $user->{password} && length($user->{password}) < 6;
+	$err |= E_USER_EMAIL()	unless $this->valid_email($user->{email});
+	$err |= E_USER_TYPE()	unless $user->{type} && $user->{type} =~ /^\d+$/;
 
 	# Validate unique username
 	my $t = $dbh->prepare_str($user->{username}, SQL_REG);
 
-	$err |= E_USER_NAME_USE if $dbh->query("	SELECT
-								username
-							FROM
-								babs_users
-							WHERE
-								username = '$t'", DB_COL);
+	$err |= E_USER_NAME_USE() if
+		$dbh->query("	SELECT
+					username
+				FROM
+					babs_users
+				WHERE
+					username = '$t'", DB_COL);
 
 	# Validate user-defined fields
-	my @uerr = $this->udf_validate(Babs::FLD_USER, $user);
-
-	return [$err, @uerr] if $err != Babs::E_NONE || @uerr;
+	my $uerr = $this->udf_validate(FLD_USER(), $user);
+	
+	return ($err, $uerr) if $err != E_NONE() || @$uerr;
 
 	# Prepare data
 	$user->{email}		= $dbh->prepare_str($this->str_parse(
-					$user->{email}, Babs::STR_NONE), SQL_REG);
+					$user->{email}, STR_NONE()), SQL_REG);
 	$user->{password}	= $dbh->prepare_str($this->crypt($user->{password}), SQL_REG);
 
 	my $sql_fields = "";
@@ -52,9 +59,6 @@ sub user_add
 	my ($field, $field_id);
 	while (($field_id, $field) = each(%{ $this->{user_fields} }))
 	{
-		$user->{$field_id} = $dbh->prepare_str($this->str_parse(
-					$user->{$field_id}, $field->{parse}), SQL_REG);
-
 		$sql_fields .= ", ud_$field_id";
 		$sql_values .= ", '$user->{$field_id}'";
 	}
@@ -74,13 +78,13 @@ sub user_add
 				'$user->{type}'
 				$sql_values
 			)", DB_NULL);
-	return [Babs::E_NONE];
+	return (E_NONE(), []);
 }
 
 sub user_update
 {
 	my ($this, $user) = @_;
-	my $err = Babs::E_NONE;
+	my $err = E_NONE();
 	my $dbh = $this->{dbh};
 
 =comment
@@ -93,18 +97,20 @@ Notes:
 	- Usernames cannot be changed.
 =cut
 	# Validate info
-	$err |= E_USER_PASS	if $user->{password} && !(length($user->{password} < 6));
-	$err |= E_USER_EMAIL	unless $this->valid_email($user->{email});
-	$err |= E_USER_TYPE	unless $user->{type} && $user->{type} =~ /^\d+$/;
+	$err |= E_USER_PASS()	if $user->{password} && !(length($user->{password} < 6));
+	$err |= E_USER_EMAIL()	unless $this->valid_email($user->{email});
+	$err |= E_USER_TYPE()	unless $user->{type} && $user->{type} =~ /^\d+$/;
 
 	# Validate user-defined fields
-	my @uerr = $this->udf_validate(FLD_USER, $user);
+	my $uerr = $this->udf_validate(FLD_USER(), $user);
 
-	return [$err, @uerr] if $err != E_NONE || @uerr;
+	return ($err, $uerr) if $err != E_NONE() || @$uerr;
 
 	# Prepare data
-	$user->{email}		= $dbh->prepare_str($this->str_parse($user->{email}, STR_NONE), SQL_REG);
-	$user->{password}	= $dbh->prepare_str($this->crypt($user->{password}), SQL_REG) if $user->{password};
+	$user->{email}		= $dbh->prepare_str($this->str_parse(
+					$user->{email}, STR_NONE()), SQL_REG);
+	$user->{password}	= $dbh->prepare_str($this->crypt($user->{password}),
+					SQL_REG) if $user->{password};
 
 	# Build SQL
 	my $sql = "	UPDATE
@@ -117,9 +123,6 @@ Notes:
 	my ($field, $field_id);
 	while (($field_id, $field) = each(%{ $this->{user_fields} }))
 	{
-		$user->{$field_id} = $dbh->prepare_str($this->str_parse(
-					$user->{$field_id}, $field->{parse}), SQL_REG);
-
 		$sql .= "	ud_$field_id	= '$user->{$field_id}', ";
 	}
 
@@ -131,7 +134,7 @@ Notes:
 
 	$dbh->query($sql, DB_NULL);
 
-	return [E_NONE, ()];
+	return (E_NONE, []);
 }
 
 sub user_get_id
@@ -174,7 +177,7 @@ sub user_remove
 {
 	my ($this, $user_id) = @_;
 	my $dbh = $this->{dbh};
-	return FALSE unless defined $user_id && $user_id =~ /^\d+$/;
+	return FALSE() unless defined $user_id && $user_id =~ /^\d+$/;
 	$dbh->query("	DELETE FROM
 				babs_stories
 			WHERE
@@ -192,7 +195,7 @@ sub user_remove
 sub user_exists
 {
 	my ($this, $user_id) = @_;
-	return FALSE unless $user_id && $user_id =~ /^\d+$/;
+	return FALSE() unless $user_id && $user_id =~ /^\d+$/;
 	return $this->{dbh}->query("	SELECT
 						user_id
 					FROM
@@ -201,4 +204,4 @@ sub user_exists
 						user_id = $user_id", DB_COL);
 }
 
-return Babs::TRUE;
+return TRUE();

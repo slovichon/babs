@@ -11,7 +11,7 @@ sub encode_http
 sub decode_http
 {
 	my ($this, $data) = @_;
-	$data =~ s/%(\d\d)/pack("H", $1)/g;
+	$data =~ s/%(\d\d)/pack("H", $1)/ge;
 	return $data;
 }
 
@@ -108,9 +108,9 @@ sub _str_remove_css
 	my @stack = ();
 	my $len = length $str;
 	my $ch;
-	my $dquot = Babs::FALSE;
-	my $squot = Babs::FALSE;
-	my $esc = Babs::FALSE;
+	my $dquot = FALSE();
+	my $squot = FALSE();
+	my $esc   = FALSE();
 
 	for (my $i = 0; $i < $len; $i++)
 	{
@@ -138,7 +138,7 @@ sub _str_remove_css
 		} elsif ($ch eq '\\') {
 			$esc = !$esc;
 		} else {
-			$esc = Babs::FALSE;
+			$esc = FALSE();
 		}
 	}
 
@@ -173,7 +173,7 @@ sub _str_check_proto
 		return in_array($1, $this->{story_allowed_protos});
 	}
 
-	return TRUE;
+	return TRUE();
 }
 
 use constant STR_NONE	=> (1<<0);
@@ -343,4 +343,4 @@ sub str_parse
 	return $str;
 }
 
-return Babs::TRUE;
+return TRUE();

@@ -1,30 +1,36 @@
 # Babs story routines
 # $Id$
 
-use constant E_STORY_HEADLINE	=> (001<<14); # No headline
-use constant E_STORY_STORY	=> (002<<14); # No story
-use constant E_STORY_EXIST	=> (004<<14); # Non-existant story
+sub _story_init
+{
+	my ($this) = @_;
+	my $g = $this->{error_const_group};
+	
+	$g->add("E_STORY_HEADLINE");	# No headline
+	$g->add("E_STORY_STORY");	# No story
+	$g->add("E_STORY_EXIST");	# Non-existant story
+}
 
 sub story_add
 {
 	my ($this, $story) = @_;
-	my $err = Babs::E_NONE;
+	my $err = E_NONE();
 	my $dbh = $this->{dbh};
 
 	# Validate info
-	$err |= E_STORY_HEADLINE	unless $story->{headline};
-	$err |= E_STORY_STORY		unless $story->{story};
-	$err |= E_STORY_EXIST		unless $story->{story_id} && $story->{story_id} =~ /^\d+$/;
-	$err |= Babs::E_USER_EXIST	unless $this->user_exists($story->{author_id});
+	$err |= E_STORY_HEADLINE()	unless $story->{headline};
+	$err |= E_STORY_STORY()		unless $story->{story};
+	$err |= E_STORY_EXIST()		unless $story->{story_id} && $story->{story_id} =~ /^\d+$/;
+	$err |= E_USER_EXIST()		unless $this->user_exists($story->{author_id});
 
 	# Validate user-defined fields
-	my @uerr = $this->udf_validate(Babs::FLD_STORY, $story);
+	my $uerr = $this->udf_validate(FLD_STORY(), $story);
 
-	return [$err, @uerr] if $err != Babs::E_NONE || @uerr;
+	return ($err, $uerr) if $err != E_NONE() || @$uerr;
 
 	# Prepare data
 	$story->{headline}	= $dbh->prepare_str($this->str_parse(
-					$story->{headline}, Babs::STR_NONE), SQL_REG);
+					$story->{headline}, STR_NONE()), SQL_REG);
 	$story->{story}		= $dbh->prepare_str($this->str_parse($story->{story}), SQL_REG);
 
 	# Build SQL
@@ -34,9 +40,6 @@ sub story_add
 	my ($field, $field_id);
 	while (($field_id, $field) = each(%{ $this->{story_fields} }))
 	{
-		$story->{$field_id} = $dbh->prepare_str($this->str_parse(
-					$story->{$field_id}, $field->{parse}), SQL_REG);
-
 		$sql_fields .= " , ud_$field_id ";
 		$sql_values .= " , '$story->{$field_id}' ";
 	}
@@ -54,38 +57,40 @@ sub story_add
 				$story->{author_id},
 			)", DB_NULL);
 
-	$story->{is_recent} = Babs::TRUE;
+	$story->{is_recent} = TRUE();
 
 	# Calculate story id only if it will be used
 	# (we're just guessing whether it will be used)
-	if ($this->event_has(Babs::EVT_STORY_ADD))
+	if ($this->event_has(EVT_STORY_ADD()))
 	{
 		$story->{story_id} = $dbh->last_insert_id;
-		$this->event_fire(Babs::EVT_STORY_ADD, $story);
+		$this->event_fire(EVT_STORY_ADD(), $story);
 	}
 	
-	return [Babs::E_NONE];
+	return (E_NONE(), []);
 }
 
 sub story_update
 {
 	my ($this, $story) = @_;
-	my $err = Babs::E_NONE;
+	my $err = E_NONE();
 	my $dbh = $this->{dbh};
 
 	# Validate info
-	$err |= E_STORY_HEADLINE	unless $story->{headline};
-	$err |= E_STORY_STORY		unless $story->{story};
-	$err |= E_STORY_EXIST		unless $story->{story_id} && $story->{story_id} =~ /^\d+$/;
+	$err |= E_STORY_HEADLINE()	unless $story->{headline};
+	$err |= E_STORY_STORY()		unless $story->{story};
+	$err |= E_STORY_EXIST()		unless $story->{story_id} && $story->{story_id} =~ /^\d+$/;
 
 	# Validate user-defined fields
-	my @uerr = $this->udf_validate(FLD_STORY, $story);
+	my $uerr = $this->udf_validate(FLD_STORY(), $story);
 
-	return [$err, @uerr] if $err != E_NONE || @uerr;
+	return ($err, $uerr) if $err != E_NONE() || @$uerr;
 
 	# Prepare data
-	$story->{headline}	= $dbh->prepare_str($this->str_parse($story->{headline}, STR_NONE), SQL_REG);
-	$story->{story}		= $dbh->prepare_str($this->str_parse($story->{story}), SQL_REG);
+	$story->{headline}	= $dbh->prepare_str($this->str_parse(
+					$story->{headline}, STR_NONE()), SQL_REG);
+	$story->{story}		= $dbh->prepare_str($this->str_parse(
+					$story->{story}), SQL_REG);
 
 	# Build SQL
 	my $sql = "	UPDATE
@@ -97,9 +102,6 @@ sub story_update
 	my ($field, $field_id);
 	while (($field_id, $field) = each(%{ $this->{story_fields} }))
 	{
-		$story->{$field_id} = $dbh->prepare_str($this->prepare_str(
-					$story->{$field_id}, $field->{parse}), SQL_REG);
-		
 		$sql .= "	ud_$field_id	= '$story->{$field_id}', ";
 	}
 
@@ -110,22 +112,22 @@ sub story_update
 	
 	$dbh->query($sql, DB_NULL);
 
-	$this->event_fire(EVT_STORY_UPDATE, $story);
+	$this->event_fire(EVT_STORY_UPDATE(), $story);
 
-	return [E_NONE];
+	return (E_NONE(), []);
 }
 
 sub story_remove
 {
 	my ($this, $story_id) = @_;
-	return FALSE unless $story_id && $story_id =~ /^\d+$/;
+	return FALSE() unless $story_id && $story_id =~ /^\d+$/;
 	my $dbh = $this->{dbh};
 
-	if ($this->event_has(EVT_STORY_REMOVE))
+	if ($this->event_has(EVT_STORY_REMOVE()))
 	{
 		# Only gather the story if it will be used
 		my $story = $this->story_get($story_id);
-		$this->event_fire(EVT_STORY_REMOVE, $story);
+		$this->event_fire(EVT_STORY_REMOVE(), $story);
 	}
 	
 	my $rows = $dbh->query("	DELETE FROM
@@ -136,7 +138,7 @@ sub story_remove
 				babs_comments
 			WHERE
 				story_id = $story_id", DB_NULL);
-	return $rows ? E_NONE : E_STORY_EXIST;
+	return $rows ? E_NONE() : E_STORY_EXIST();
 }
 
 # This sets the field `is_recent' in a story to the
@@ -147,12 +149,12 @@ sub story_set_recent
 {
 	my ($this, $story, $type) = @_;
 	return if defined $story->{is_recent};
-	$story->{is_recent} =  FALSE;
+	$story->{is_recent} = FALSE();
 	return unless $story->{story_id} && $story->{story_id} =~ /^\d+$/;
 
 	# Check type
 	$type = "default_result_limit" unless defined $type;
-	return FALSE unless grep {$type eq $_} qw(default_result_limit max_result_limit);
+	return FALSE() unless grep {$type eq $_} qw(default_result_limit max_result_limit);
 
 	# Ask for the most recent stories
 	$this->{dbh}->query("	SELECT
@@ -169,7 +171,7 @@ sub story_set_recent
 		if ($id == $story->{story_id})
 		{
 			# Requested story is a recent one
-			$story->{is_recent} = TRUE;
+			$story->{is_recent} = TRUE();
 			return;
 		}
 	}
@@ -222,7 +224,7 @@ sub story_get_comments
 sub story_exists
 {
 	my ($this, $story_id) = @_;
-	return FALSE unless $story_id && $story_id =~ /^\d+$/;
+	return FALSE() unless $story_id && $story_id =~ /^\d+$/;
 	return $this->{dbh}->query("	SELECT
 						story_id
 					FROM
@@ -231,4 +233,4 @@ sub story_exists
 						story_id = $story_id", DB_COL);
 }
 
-return Babs::TRUE;
+return TRUE();
