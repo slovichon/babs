@@ -1,11 +1,6 @@
 # str.inc - Babs string routines
 # $Id$
 
-use constant STR_NONE	=> (1<<0);
-use constant STR_HTML	=> (1<<1);
-use constant STR_URL	=> (1<<2);
-use constant STR_ALL	=> STR_HTML | STR_URL;
-
 sub encode_http
 {
 	my ($this, $data) = @_;
@@ -26,13 +21,13 @@ sub encode_html
 	my %tbl =
 	(
 		'"' => "quot",
-		"'" => "apos",
+#		"'" => "apos",
 		'<' => "lt",
 		'>' => "gt",
 		'&' => "amp",
 	);
-	my $c = qr![^a-zA-Z0-9_=()\[\]{}!@#\$%^\*:;.,\/\\\|+-]!;
-	$data =~ s/$c/"$" . (exists $tbl{$&} ? $tbl{$&} : "#" . ord($&)) . ";"/ge;
+	my $c = qr![^a-zA-Z0-9_`=~\!@#\$%^*()_+\[\]{};:\|.\\,/-]!;
+	$data =~ s/$c/"\$" . (exists $tbl{$&} ? $tbl{$&} : "#" . ord($&)) . ";"/ge;
 	return $data;
 }
 
@@ -42,12 +37,12 @@ sub decode_html
 	my %tbl =
 	(
 		"quot"	=> '"',
-		"apos"	=> "'",
+#		"apos"	=> "'",
 		"lt"	=> '<',
 		"gt"	=> '>',
 		"amp"	=> '&',
 	);
-	$data =~ s/$#(\d+);/chr($1)/ge;
+	$data =~ s/\$#(\d+);/chr($1)/ge;
 	$data =~ s/&(.*);/exists $tbl{$1} ? $tbl{$1} : $&/ge;
 	return $data;
 }
@@ -108,7 +103,7 @@ sub _str_remove_css
 		$ch = substr $str, $i, 1;
 		if ($ch eq ';' && @stack == 0)
 		{
-			push $starts, $i+1 if $i+1 < $len;
+			push @starts, $i+1 if $i+1 < $len;
 		} elsif ($ch eq '"') {
 			unless ($squot or $esc)
 			{
@@ -167,115 +162,95 @@ sub _str_check_proto
 	return TRUE;
 }
 
+use constant STR_NONE	=> (1<<0);
+use constant STR_HTML	=> (1<<1);
+use constant STR_URL	=> (1<<2);
+use constant STR_ALL	=> STR_HTML | STR_URL;
+
 sub str_parse
 {
+	my ($this, $str, $flags) = @_;
+	
+	$str = $this->encode_html($str);
 
+	if ($flags & STR_HTML)
+	{
+		# We should probably make an option including leaving
+		# alone, blocking, and truncating.
+		
+		# Allowed HTML
+		my $allowed = lc join "|", @{ $this->{story_allowed_html} };
+		$str =~	s{
+				&lt;			# Escaped tag start
+				(			# $1
+					/?		# Start/end
+					(?i:$allowed)	# Tag name
+					\b		# Word boundary
+					.*?		# Rest of tag
+				)
+				&gt;
+			}{<$1>}gsx;			# <$tag parse_attr($attr)> ?
+
+		# Allowed attributes
+		my $new = $str;
+		my $attrs  = $this->{story_allowed_attrs};
+		my $protos = $this->{story_attr_protos};
+		do
+		{
+			$str = $new;
+			$new =~	s{
+					(				# HTML tag ($1)
+						<			# Tag already allowed
+						\w+			# Tag name
+						(?:\s*\w+=\".*?\")*	# Previously-allowed attributes
+						\s?			# Formatting
+					)
+						\s*			# Whitespace
+						(\w+)			# Attribute name ($2)
+						\s* = \s*		# Equals
+						(			# Attribute ($3) (one of the following)
+							&quot;.*?&quot;	# Double quotes (escaped)
+							|		# Or
+							'.*?'		# Single quotes
+							|		# Or
+							[^"\s>]+	# Note quotes (bounded by whitespace)
+						)
+					(				# End of tag ($4)
+						.*?			# Rest of tag
+						>			# End
+					)
+				}{
+					$1 .				# Tag + previous attributes
+					(
+						# Validate attribute; must be allowed in
+						# story_allowed_attrs, and if of type
+						# story_attr_proto, it is subject to
+						# malicious protocol checking
+						in_array($2, $attrs) &&
+						(
+							in_array($2, $protos) ?
+
+							# Subject to checking if special attribute
+							$this->_str_check_proto($this->_str_clean_attr($3))
+
+							# Else it's OK
+							: TRUE
+						) ?
+
+						# Format attribute
+						qq! $2="! . $this->_str_clean_attr($3) . qq!"!
+
+						# It didn't pass; so nothing
+						: ""
+					) .
+					$4
+				}sex;
+		} until ($new eq $str);
+	}
 }
 
 
-
-	function newsys_str_parse($str,$flags = NEWSYS_STR_ALL)
-	{
-		# Convert HTML
-		$str = htmlEntities($str);
-
-		if ($flags & NEWSYS_STR_HTML)
-		{
-			/*
-			 * Note: should probably be an option including leaving
-			 * alone, blocking, and truncating.
-			 */
-
-			# Allowed HTML tags
-			$html	= strToLower(join("|",newsys_conf("story_allowed_html")));
-			$str	=	preg_replace
-					(
-						"!
-							&lt;			# HTML is escaped
-							(
-								/?		# Start or end
-								(?i:$html)	# Case-insensitive tag match
-								\b		# Word boundary
-								.*?		# Rest of tag
-							)
-							&gt;
-						!x",
-						"<$1>",# "<$tag parse_attr($attr)>" ?
-						$str
-					);
-
-			# Allowed HTML attributes
-			$story_allowed_attr	= newsys_conf("story_allowed_attr");
-			$story_attr_proto	= newsys_conf("story_attr_proto");
-
-			while (1)
-			{
-				$new = preg_replace
-				(
-					"!
-					( # HTML tag ($1)
-						<				# HTML tag (allowed & matched)
-							\w+
-							(?:\s*\w+=\".*?\")*	# Previously-allowed attributes
-							\s?			# Just for formatting purposes
-					)
-							\s*
-							(\w+)			# Attribute name ($2)
-							\s*
-							=
-							\s*
-							( # Attribute ($3) (One of the following...)
-								&quot;.*?&quot;	# Double quotes
-								|
-								'.*?'		# Single quotes (not changed
-								|		#	in htmlEntities()
-								[^\"\s>]+	# No quotes, bounded by whitespace
-							)
-					( # End of tag ($4)
-							.*?			# Other tag content
-						>				# End of tag
-					)
-					!xe",
-					'
-						"$1" .	# Tag and previous attributes
-						(
-							/*
-							 * Validate attribute, must be allowed in
-							 * story_allowed_attr and if its of type to be
-							 * checked for malicious protocols, subject
-							 * to checking
-							 */
-							in_array("$2",$story_allowed_attr) &&
-							(
-								in_array("$2",$story_attr_proto) ?
-
-								# Subject to checking if special attribute
-								newsys_check_proto(newsys_clean_attr("$3"))
-
-								# Else it is good
-								: TRUE
-							) ?
-
-							# Formatted attribute
-							" $2=\"" . newsys_clean_attr("$3") . "\""
-
-							# Or nothing
-							: ""
-						) .
-						"$4"
-					',
-					$str,
-					1 # We can only perform this match once per loop
-				);
-
-				if ($new == $str)
-					# Nothing changed, we're done
-					break;
-				else
-					# "Save changes" and continue to next attribute
-					$str = $new;
-			}
-		}
+function()
 
 		# Turn URLs into hyperlinks
 		if ($flags & NEWSYS_STR_URL)
