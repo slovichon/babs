@@ -39,8 +39,31 @@ my $b = Babs->construct(thraxx=>$t, wasp=>$t, dbh=>undef, skip_init=>1,
 # model can leave the system in an unknown state should a procedure
 # fail, cleanups will have to be performed.
 
+# users.inc
+my %user = (
+	
+);
+test "user_add";
+_ $b->user_add();
+
+$b->user_update;
+$b->user_get_id;
+$b->user_get;
+$b->user_exists;
+
+# story.inc
+$b->story_add;
+$b->story_update;
+$b->story_remove;
+$b->story_set_recent;
+$b->story_get;
+$b->story_get;
+$b->story_get_comments;
+$b->story_exists;
+$b->story_search;
+
 # comments.inc
-$b->comment_add;
+$b->comment_add();
 $b->comment_update;
 $b->comment_remove;
 $b->comment_get;
@@ -48,7 +71,8 @@ $b->comment_get_ancestors;
 $b->comment_exists;
 
 # crypt.inc
-$b->crypt;
+$b->crypt("");
+# These are impossible to test
 $b->rand_str;
 $b->gen_key;
 
@@ -100,25 +124,14 @@ $b->session_is_logged_in;
 $b->session_logout;
 $b->session_login;
 
-# story.inc
-$b->story_add;
-$b->story_update;
-$b->story_remove;
-$b->story_set_recent;
-$b->story_get;
-$b->story_get;
-$b->story_get_comments;
-$b->story_exists;
-$b->story_search;
-
 # str.inc
 $b->escape_http;
 $b->unescape_http;
 $b->escape_html;
 $b->escape_html;
 $b->unescape_html;
-$b->escape_slashes;
-$b->unescape_slashes;
+_ $b->escape_slashes(q!a"b" c\\" d' \\\\ef'!) eq qq!a\\"b\\" c\\\\\\"d\\' \\\\\\\\ef\\'!;
+_ $b->unescape_slashes("") eq "";
 $b->str_parse;
 
 # templates.inc
@@ -132,14 +145,6 @@ $b->udf_validate;
 $b->udf_update;
 $b->udf_update_db;
 
-# users.inc
-$b->user_add;
-$b->user_update;
-$b->user_get_id;
-$b->user_get;
-$b->user_remove;
-$b->user_exists;
-
 # xml.inc
 $b->xml_getfile;
 $b->xml_openfile;
@@ -149,5 +154,7 @@ $b->xml_add;
 $b->xml_remove;
 $b->xml_throw;
 $b->xml_setup;
+
+$b->user_remove($user{id});
 
 exit 0;
