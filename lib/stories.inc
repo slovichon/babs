@@ -143,6 +143,7 @@ sub story_remove
 sub story_set_recent
 {
 	my ($this, $story, $type) = @_;
+	return if defined $story->{is_recent};
 	$story->{is_recent} =  FALSE;
 	return unless $story->{story_id} && $story->{story_id} =~ /^\d+$/;
 
