@@ -30,6 +30,35 @@ sub dbh_selectcol {
 	return ref $ret eq "HASH" && defined $ret->[0] ? $ret->[0] : "";
 }
 
+=item
+
+use constant SQL_REG	=> 1;
+use constant SQL_WILD	=> 2;
+use constant SQL_RE	=> 3;
+use constant SQL_REGEXP	=> SQL_RE();
+use constant SQL_REGEX	=> SQL_RE();
+
+=cut
+
+sub dbh_quote {
+	my ($this, $data, $type) = @_;
+	my $dbh = $this->{dbh};
+	$type = 0 unless $type;
+
+	$data = $dbh->quote($data);
+	if ($type == SQL_REG) {
+		# We're done
+	} elsif ($type == SQL_WILD) {
+		$data =~ s/([_%])/\\$1/g;
+	} elsif ($type == SQL_REG) {
+		$data =~ s!([\[\]*^+.$])!\\$1!g;
+	} else {
+		$this->throw("Unknown SQL quote/escape type; type: $type");
+	}
+
+	return $data;
+}
+
 =back
 
 =cut
