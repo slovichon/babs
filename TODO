@@ -7,3 +7,4 @@ default template add
 	size (xxx Kilobytes)
 	est. reading time (size/readrate=num of min)
 add random field in story post to prevent batch posting?
+in str_parse(), replace the while loop in html attr parsing with m//cg
