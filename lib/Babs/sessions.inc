@@ -1,11 +1,11 @@
 # Babs session routines
 # $Id$
 
-use DBH qw(:all);
 use strict;
 
-use constant AUTH_HTTP 		=> 1;
-use constant AUTH_COOKIE	=> 1;
+use constant AUTH_HTTP   => 1;
+use constant AUTH_COOKIE => 2;
+use constant AUTH_URL    => 3; # Tack on params sto all URLs.
 
 sub _session_init {
 	my ($this) = @_;
@@ -47,15 +47,15 @@ sub session_require_login {
 				if (!$@ && $auth =~ /(.*?):(.*)/) {
 					my $user = $1;
 					my $pass = $2;
-					$user = $dbh->prepare_str($user, SQL_REG);
-					$user_id = $dbh->query("
+					$user_id = $dbh->selectrow_array(<<SQL, {}, $user);
 							SELECT
 								user_id
 							FROM
 								babs_users
 							WHERE
-								username = '$user' ", DB_COL);
-					unless ($this->{thraxx}->session_auth($user_id, $pass)) {
+								username = ?
+SQL
+					unless ($user_id && $this->{thraxx}->session_auth($user_id, $pass)) {
 						return $user_id;
 					}
 				}
