@@ -1,12 +1,12 @@
 # comments.in - Babs comment routines
 # $Id$
 
-use constant E_COMMENT_COM	=> 040&&(1<<0); # No comment field
-use constant E_COMMENT_SUBJECT	=> 040&&(1<<1); # No subject
-use constant E_COMMENT_STORY	=> 040&&(1<<2); # No such story
-use constant E_COMMENT_PRIV	=> 040&&(1<<3); # Not allowed
-use constant E_COMMENT_EXIST	=> 040&&(1<<4); # Non-existant comment
-use constant E_COMMENT_MAX	=> 040&&(1<<5); # Max comments reached
+use constant E_COMMENT_COM	=> (001<<0); # No comment field
+use constant E_COMMENT_SUBJECT	=> (002<<0); # No subject
+use constant E_COMMENT_STORY	=> (004<<0); # No such story
+use constant E_COMMENT_PRIV	=> (010<<0); # Not allowed
+use constant E_COMMENT_EXIST	=> (020<<0); # Non-existant comment
+use constant E_COMMENT_MAX	=> (040<<0); # Max comments reached
 
 sub comment_add
 {

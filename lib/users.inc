@@ -7,12 +7,12 @@ use constant USER_LVL_REGULAR	=> 2;
 use constant USER_LVL_ADMIN	=> 3;
 
 # User errors
-use constant E_USER_NAME	=> 010&&(1<<0); # Invalid username
-use constant E_USER_NAME_USE	=> 010&&(1<<1); # Username already in use
-use constant E_USER_PASS	=> 010&&(1<<2); # Invalid password
-use constant E_USER_EMAIL	=> 010&&(1<<3); # Invalid e-mail address
-use constant E_USER_TYPE	=> 010&&(1<<4); # Invalid user type
-use constant E_USER_EXIST	=> 010&&(1<<5); # Non-existant user
+use constant E_USER_NAME	=> (001<<7); # Invalid username
+use constant E_USER_NAME_USE	=> (002<<7); # Username already in use
+use constant E_USER_PASS	=> (004<<7); # Invalid password
+use constant E_USER_EMAIL	=> (010<<7); # Invalid e-mail address
+use constant E_USER_TYPE	=> (020<<7); # Invalid user type
+use constant E_USER_EXIST	=> (040<<7); # Non-existant user
 
 sub user_add
 {

@@ -1,9 +1,9 @@
 # stories.inc - Babs story routines
 # $Id$
 
-use constant E_STORY_HEADLINE	=> 020&&(1<<0);	# No headline
-use constant E_STORY_STORY	=> 020&&(1<<1);	# No story
-use constant E_STORY_EXIST	=> 020&&(1<<2);	# Non-existant story
+use constant E_STORY_HEADLINE	=> (001<<14); # No headline
+use constant E_STORY_STORY	=> (002<<14); # No story
+use constant E_STORY_EXIST	=> (004<<14); # Non-existant story
 
 sub story_add
 {
