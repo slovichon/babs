@@ -247,114 +247,86 @@ sub str_parse
 				}sex;
 		} until ($new eq $str);
 	}
-}
 
-
-function()
-
-		# Turn URLs into hyperlinks
-		if ($flags & NEWSYS_STR_URL)
+	if ($flags & STR_URL)
+	{
+		if ($this->{story_auto_urls})
 		{
-			if (newsys_conf("story_auto_urls"))
-			{
-				$tlds = "(?:" .
-					join("|",newsys_conf("story_auto_url_tlds")) . ")";
+			# If admin specifies which TLDs to check, enforce them.
+			# Else any "supposed" TLD will automate.
+			my $tlds = @{ $this->{story_auto_url_tlds} } ?
+				"(?:" . join "|", @{ $this->{story_auto_url_tlds} } . ")\b" :
+				"[a-zA-Z]+";
+			# (?= \s | / | $)
 
-				/*
-				 * Since negative lookbehind assertions are not
-				 * supported, we'll save want we don't want to
-				 * match and check its absence in our
-				 * replacement section.
-				 *
-				 * Below is the following:
-				 *	\\1 -> what was matched
-				 *	\\2 -> what we don't want to match
-				 *	\\3 -> the URL
-				 */
-/*
- * NOTE: we have a potential bug as this rewrites URLs assuming they're in
- * HTML format. It should actually grab the output of $of->link() and make
- * changes relative to that accordingly.
- */
-				$str	=	preg_replace
-						(
-							"{(	# Everything - in case of failed match ($1)
-#								(?<!<a\b[^>]+\bhref\s*=\s*[\"']?|<a\b[^>]+\bhref\b[^>]+>)
-								# What we don't want to match ($2)
-								(
-									# <a href=URL
-									<a\n[^>]+\bhref\s*=\s*[\"']?
-									|
-									# <a>URL</a>
-									<a[^>]*>(?!.*</a>.*)
-									|
-									# URL
+			# As variable-length negative lookbehind assertions
+			# are unsupported, we will instead save what we
+			# don't want to match and assert its absence in the
+			# replacement.
+			#
+			# Note that this is all done relative to HTML
+			# formatting. Perhaps a correct alternative is to
+			# parse the output of OF::link() accordingly.
+			$str =~	s{
+#					(?<!<a\b[^>]+\bhref\s*=\s*[\"']?|<a\b[^>]+\bhref\b[^>]+>)
+					(	# URLs we don't want to match ($1)
+						# <a href=*URL*
+						<a \b [^>]+ \b href \s* = \s* ["']?
+						|
+
+						# <a>*URL*</a>
+						<a \b [^>]* > (?! .* </a> .* )
+						|
+
+						# *URL*
+					)
+					(	# The URL ($2)
+						(?: https?:/{1,3} )?		# Optional HTTP protocol
+						(?: www \. )?			# Optional WWW
+#						(?! \d+ \. \d+ \b )		# Prevents, e.g., "3.3"
+						[a-zA-Z0-9-]
+						[a-zA-Z0-9.-]+			# Hostname
+						\.
+						(?:
+							$tlds			# Top-level domain
+							(?:			# Optional path
+								/ \S*?
+								(?=		# URLs hardly containg trailing punctuation
+									[,.:;!]+$	# Punctuation at EOL
+									|		# Or
+									[,.:;!]+\s	# Puncation before space
+									|		# Or
+									$		# EOL
+									|		# Or
+									\s		# Space
 								)
-								# The URL ($3)
-								(
-									(?:http:/{1,3})?
-									(?:www\\.)?
-								#	(?!\d+\\.\d+\b) # To prevent, e.g., `3.3'
-									[a-zA-Z0-9-]
-									[a-zA-Z0-9.-]+
-									\\.
-									(?:
-										" .
-										# check if they want us to match preset tlds
-										($tlds == "(?:)" ? "
-											[a-zA-Z]+ # tld
-										" : "
-											$tlds\b
-								#			(?=\s|/|$)
-										") .
-										"
-										(?:
-											/
-											\S*?
-											(?=
-												[,.:;!]+$|
-												[,.:;!]+\s|
-												$|
-												\s
-											) # No trailing punctuation
-										)?
-								#		\S*
-									)
-								)
-							)}iex",
-							'
-								"$2" ? "$1" :
-								"<a href=\\"" .
-								(
-									preg_match("!^http://!","$3") ?
-									"" :
-									"http://"
-								) .
-								(
-									preg_match
-									(
-										"!/!",
-										preg_replace("!^http://!","","$3")
-									)
-									?
-									"$3"
-									:
-									"$3/"
-								) .
-								"\\">$3</a>"
-							',
-							$str
-						);
-			}
+							)?
+#							\S*
+						)
+					)
+				}{
+					my $url = $2;
+					$1 ? $& :					# If we matched what we don't
+											# want to, bail out
+					qq!<a href="! .					# Start tag
+					( $url =~ m!^http://(?:[^/]|$)! ?
+					  "" : "http://" ) .				# Protocol
+					(
+						$url =~ m!(^http://?/?)?.*/! ?
+						$url : "$url/"				# URL/
+					) .
+					qq!">$3</a>!
+				}igex;
 		}
-
-		# Fix newline madness
-		$str = preg_replace("/\r\n|(?!<\r)\n|(?!<\n)\r/","<br />",$str);
-
-		# Break up long words
-		$str = preg_replace("!([^\s<>/\"']{" . newsys_conf("story_word_length") . "})!","\\1 ",$str);
-
-		return $str;
 	}
+
+	# Fix newlines
+	$str =~ s~\r\n | (?<!\r)\n | (?<!\n)\r | \n | \r~<br />~xg;
+
+	# Break up long words
+	$str =~ s![^\s<>/"']{$this->{story_word_length}}!$& !g;
+
+	return $str;
+}
 
 return 1;
