@@ -7,37 +7,32 @@ use strict;
 use constant AUTH_HTTP 		=> 1;
 use constant AUTH_COOKIE	=> 1;
 
-sub _session_init
-{
+sub _session_init {
 	my ($this) = @_;
 	my $g = $this->{error_const_group};
 
 	$g->add("E_SESSION_NOREC"); # No record for supposed logged-in user
 }
 
-sub session_auth
-{
+sub session_auth {
 	my ($this, $username, $password) = @_;
 }
 
-sub session_require_login
-{
+sub session_require_login {
 	my ($this, $priv) = @_;
 	my $dbh = $this->{dbh};
 	# Default is to see whether user is logged in,
 	# regardless of privileges
 	$priv = USER_LVL_COMMENTER() unless $priv;
 	my $user_id = $this->session_is_logged_in;
-	if ($user_id)
-	{
+	if ($user_id) {
 		# Check privileges
 		my $user = $this->user_get($user_id);
 		return $user_id if $user_id && $user->{type} > $priv;
 	}
 	
 	# Do login form show
-	if ($this->{auth_type} == AUTH_HTTP())
-	{
+	if ($this->{auth_type} == AUTH_HTTP()) {
 		my $tried = 0;
 		if ($ENV{MOD_PERL}) {
 			my $auth = $this->{isapi}->header_in("Authorization");
@@ -81,8 +76,7 @@ sub session_require_login
 	exit(2);
 }
 
-sub session_is_logged_in
-{
+sub session_is_logged_in {
 	my ($this) = @_;
 	my $user_id;
 	# Determine if the user is logged in according
@@ -98,6 +92,7 @@ sub session_is_logged_in
 		}
 	} elsif ($this->{auth_type} == AUTH_COOKIE()) {
 		my ($session_id, $session_key);
+		$this->{session_id} = $session_id;
 #	} elsif ($this->{auth_type} == AUTH_HIDDEN()) {
 #		# Same as AUTH_COOKIE
 #	} else {
@@ -107,19 +102,16 @@ sub session_is_logged_in
 	return undef;
 }
 
-sub session_logout
-{
+sub session_logout {
 	my ($this) = @_;
-	if ($this->session_is_logged_in)
-	{
-		$this->{thraxx}->session_remove($session_id);
+	if ($this->session_is_logged_in && $this->{session_id}) {
+		$this->{thraxx}->session_remove($this->{session_id});
 	} else {
 		return E_SESSION_NOREC();
 	}
 }
 
-sub session_login
-{
+sub session_login {
 	my ($this, $username, $password) = @_;
 	my $thraxx = $this->{thraxx};
 	my $dbh = $this->{dbh};
