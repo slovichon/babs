@@ -305,6 +305,11 @@ sub construct {
 
 	my $this = bless \%prefs, ref($class) || $class;
 
+	# Override DBI error-handling
+	$this->{dbh}->{HandleError} = sub {
+		$this->throw(shift);
+	};
+
 	# Propagate construction
 	$this->_comment_init();
 	$this->_stories_init();
