@@ -84,4 +84,4 @@ sub footer
 	return $this->template_expand("footer");
 }
 
-return 1;
+return Babs::TRUE;

@@ -61,7 +61,7 @@ sub udf_validate
 sub udf_update
 {
 	my $this = shift;
-	my $change = FALSE;
+	my $change = Babs::FALSE;
 	my %old_types;
 	my %changed = ();
 
@@ -79,7 +79,7 @@ sub udf_update
 		$old_fields = {} unless ref $old_fields eq "HASH";
 		if (hasheq($old_fields, $this->{$field_id}))
 		{
-			$change = TRUE;
+			$change = Babs::TRUE;
 			$changed{$field_id} = $old_fields;
 		}
 	}
@@ -102,7 +102,8 @@ sub udf_update_db
 	);
 
 	my ($id, $fields, @removed, %diff, $field_id,
-		$field, $new_field_id, $new_field, %sigs);
+		$field, $new_field_id, $new_field,
+		$old_fields, %sigs);
 
 	while (($id, $old_fields) = each %$changed)
 	{
@@ -175,4 +176,4 @@ sub udf_update_db
 	}
 }
 
-return 1;
+return Babs::TRUE;

@@ -8,22 +8,23 @@ use constant E_STORY_EXIST	=> (004<<14); # Non-existant story
 sub story_add
 {
 	my ($this, $story) = @_;
-	my $err = E_NONE;
+	my $err = Babs::E_NONE;
 	my $dbh = $this->{dbh};
 
 	# Validate info
 	$err |= E_STORY_HEADLINE	unless $story->{headline};
 	$err |= E_STORY_STORY		unless $story->{story};
 	$err |= E_STORY_EXIST		unless $story->{story_id} && $story->{story_id} =~ /^\d+$/;
-	$err |= E_USER_EXIST		unless $this->user_exists($story->{author_id});
+	$err |= Babs::E_USER_EXIST	unless $this->user_exists($story->{author_id});
 
 	# Validate user-defined fields
-	my @uerr = $this->udf_validate(FLD_STORY, $story);
+	my @uerr = $this->udf_validate(Babs::FLD_STORY, $story);
 
-	return [$err, @uerr] if $err != E_NONE || @uerr;
+	return [$err, @uerr] if $err != Babs::E_NONE || @uerr;
 
 	# Prepare data
-	$story->{headline}	= $dbh->prepare_str($this->str_parse($story->{headline}, STR_NONE), SQL_REG);
+	$story->{headline}	= $dbh->prepare_str($this->str_parse(
+					$story->{headline}, Babs::STR_NONE), SQL_REG);
 	$story->{story}		= $dbh->prepare_str($this->str_parse($story->{story}), SQL_REG);
 
 	# Build SQL
@@ -53,21 +54,23 @@ sub story_add
 				$story->{author_id},
 			)", DB_NULL);
 
-	$story->{is_recent} = TRUE;
+	$story->{is_recent} = Babs::TRUE;
 
 	# Calculate story id only if it will be used
 	# (we're just guessing whether it will be used)
-	$story->{story_id} = $dbh->last_insert_id if $this->event_has(EVT_STORY_ADD);
-
-	$this->event_fire(EVT_STORY_ADD, $story);
-
-	return [E_NONE];
+	if ($this->event_has(Babs::EVT_STORY_ADD))
+	{
+		$story->{story_id} = $dbh->last_insert_id;
+		$this->event_fire(Babs::EVT_STORY_ADD, $story);
+	}
+	
+	return [Babs::E_NONE];
 }
 
 sub story_update
 {
 	my ($this, $story) = @_;
-	my $err = E_NONE;
+	my $err = Babs::E_NONE;
 	my $dbh = $this->{dbh};
 
 	# Validate info
@@ -228,4 +231,4 @@ sub story_exists
 						story_id = $story_id", DB_COL);
 }
 
-return 1;
+return Babs::TRUE;

@@ -12,10 +12,10 @@ sub comment_add
 {
 	my ($this, $comment) = @_;
 	my $dbh = $this->{dbh};
-	my $err = E_NONE;
+	my $err = Babs::E_NONE;
 
 	# Validate story
-	return [E_STORY_EXIST, ()] unless $this->story_exists($comment->{story_id});
+	return [Babs::E_STORY_EXIST, ()] unless $this->story_exists($comment->{story_id});
 
 	my $story = $this->story_get($comment->{story_id});
 
@@ -24,18 +24,18 @@ sub comment_add
 	$err |= E_COMMENT_SUBJECT	unless $comment->{subject};
 	$err |= E_COMMENT_PRIV		unless $this->{allow_comments};
 	$err |= E_COMMENT_MAX		if $this->{max_comments} &&
-						$story{num_comments} >= $this->{max_comments};
-	$err |= E_USER_EXIST		unless $this->user_exists($comment->{author_id});
+						$story->{num_comments} >= $this->{max_comments};
+	$err |= Babs::E_USER_EXIST	unless $this->user_exists($comment->{author_id});
 	$err |= E_COMMENT_EXIST		if $comment->{parent_comment_id} && 
 						!$this->comment_exists($comment->{parent_comment_id});
 
-	my @uerr = $this->udf_validate(FLD_COMMENT, $comment);
+	my @uerr = $this->udf_validate(Babs::FLD_COMMENT, $comment);
 
-	return [$err, @uerr] if $err != E_NONE || @uerr;
+	return [$err, @uerr] if $err != Babs::E_NONE || @uerr;
 	
 	# Prepare data
 	$comment->{comment} = $dbh->prepare_str($this->str_parse($comment->{comment}), SQL_REG);
-	$comment->{subject} = $dbh->prepare_str($this->str_parse($comment->{subject}, STR_NONE), SQL_REG);
+	$comment->{subject} = $dbh->prepare_str($this->str_parse($comment->{subject}, Babs::STR_NONE), SQL_REG);
 	$comment->{parent_comment_id} = 0 unless $comment->{parent_comment_id};
 
 	# Generate unique comment id
@@ -91,29 +91,29 @@ sub comment_add
 			WHERE
 				story_id = $comment->{story_id}", DB_NULL);
 	
-	$this->event_fire(EVT_COMMENT_ADD, $comment);
+	$this->event_fire(Babs::EVT_COMMENT_ADD, $comment);
 	
-	return [E_NONE, ()];
+	return [Babs::E_NONE, ()];
 }
 
 sub comment_update
 {
 	my ($this, $comment) = @_;
 	my $dbh = $this->{dbh};
-	my $err = E_NONE;
+	my $err = Babs::E_NONE;
 
 	# Validate info
-	$err |= E_COM_COM	unless $comment->{comment};
-	$err |= E_COM_SUBJECT	unless $comment->{subject};
-	$err |= E_COM_STORY	unless $this->story_exists($comment->{story_id});
-	$err |= E_COM_EXIST	unless $this->comment_exists($comment->{comment_id});
+	$err |= E_COMMENT_COM		unless $comment->{comment};
+	$err |= E_COMMENT_SUBJECT	unless $comment->{subject};
+	$err |= E_COMMENT_STORY		unless $this->story_exists($comment->{story_id});
+	$err |= E_COMMENT_EXIST		unless $this->comment_exists($comment->{comment_id});
 
-	my @uerr = $this->udf_validate(FLD_COMMENT, $comment);
+	my @uerr = $this->udf_validate(Babs::FLD_COMMENT, $comment);
 
 	return [$err, @uerr] if $err != E_NONE || @uerr;
 
 	# Prepare data
-	$comment->{subject} = $dbh->prepare_str($this->str_parse($comment->{subject}, STR_NONE), SQL_REG);
+	$comment->{subject} = $dbh->prepare_str($this->str_parse($comment->{subject}, Babs::STR_NONE), SQL_REG);
 	$comment->{comment} = $dbh->prepare_str($this->str_parse($comment->{comment}), SQL_REG);
 
 	my $sql = "	UPDATE
@@ -137,13 +137,14 @@ sub comment_update
 				story_id	= $comment->{story_id}
 			AND	comment_id	= $comment->{comment_id} ";
 	$dbh->query($sql, DB_NULL);
-	$this->event_fire(EVT_COMMENT_UPDATE, $comment);
-	return [E_NONE, ()];
+	$this->event_fire(Babs::EVT_COMMENT_UPDATE, $comment);
+	return [Babs::E_NONE, ()];
 }
 
 sub comment_remove
 {
 	my ($this, $story_id, $comment_id) = @_;
+	my $dbh = $this->{dbh};
 
 	return FALSE unless $this->story_exists($story_id);
 	return FALSE unless $this->comment_exists($comment_id);
@@ -164,7 +165,7 @@ sub comment_remove
 
 	# Create a list of parent => child comments
 	my ($i_id, $i_parent);
-	while (($i_id, $i_parent) = each $dbh->fetch_row)
+	while (($i_id, $i_parent) = $dbh->fetch_row)
 	{
 		if (exists $all{$i_parent})
 		{
@@ -239,7 +240,7 @@ sub comment_get_ancestors
 {
 	my ($this, $needle, $hay) = @_;
 	my @ancestors = ($needle);
-	my $resume = TRUE;
+	my $resume = Babs::TRUE;
 	my ($parent, $children, $child);
 
 	STARTOVER: while ($resume)
@@ -276,4 +277,4 @@ sub comment_exists
 						comment_id = $comment_id", DB_COL);
 }
 
-exit 0;
+return Babs::TRUE;

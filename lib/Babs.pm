@@ -6,6 +6,7 @@ use Timestamp;
 use OF;
 use DBH qw(:all);
 use Exporter;
+use Thraxx;
 
 BEGIN {
 	if ($ENV{MOD_PERL})
@@ -35,8 +36,8 @@ sub new
 	);
 
 	# Fill up %prefs
-	delete $INC{"babs-config.inc"} if exists $INC{"babs-config.inc"};
-	require "babs-config.inc";
+	my ($path) = ($INC{'Babs.pm'} =~ m!(.*/)!);
+	eval slurp_file($prefs{wasp}, "$path/babs-config.inc");
 
 	# Initialize DBH
 	{
@@ -66,6 +67,12 @@ sub new
 			$prefs{wasp}, \%of_prefs);
 	}
 
+	# Initialize Thraxx
+	{
+		$prefs{thraxx} = Thraxx->new(wasp=>$prefs{wasp},
+					dbh=>$prefs{dbh});
+	}
+
 	return construct($class, %prefs);
 }
 
@@ -74,17 +81,17 @@ sub construct
 	my ($class, %prefs) = @_;
 
 	# Error-check our environment
-	die("No WASP object specified")	unless $prefs{wasp};
+	die("No WASP object specified")			unless $prefs{wasp};
 	$prefs{wasp}->throw("No ISAPI specified")	unless $prefs{isapi};
 	$prefs{wasp}->throw("No DBH specified")		unless $prefs{dbh};
 	$prefs{wasp}->throw("No OF specified")		unless $prefs{of};
 
 	# Strict-preference setting
-	tie %prefs, 'Babs::Prefs', %prefs;
+	tie %prefs, 'Babs::Prefs', %prefs unless tied $prefs;
 
-	# This should fill up %prefs
-	delete $INC{"babs-config.inc"} if exists $INC{"babs-config.inc"};
-	require "babs-config.inc";
+	# Fill up %prefs
+	my ($path) = ($INC{'Babs.pm'} =~ m!(.*/)!);
+	eval slurp_file($prefs{wasp}, "$path/babs-config.inc");
 
 	my $this = bless \%prefs, ref($class) || $class;
 
@@ -92,7 +99,7 @@ sub construct
 	$this->_xml_init();
 	$this->_udf_init();
 
-	# Property definition
+	# Property initialization
 	$this->{gen_class} = 0;
 
 	return $this;
@@ -116,16 +123,19 @@ sub throw
 	$this->{wasp}->throw($msg);
 }
 
-require "comments.inc";
-require "crypt.inc";
-require "event.inc";
-require "isr.inc";
-require "sessions.inc";
-require "stories.inc";
-require "templates.inc";
-require "udf.inc";
-require "users.inc";
-require "xml.inc";
+require "Babs/comments.inc";
+require "Babs/crypt.inc";
+require "Babs/event.inc";
+require "Babs/isr.inc";
+require "Babs/misc.inc";
+require "Babs/of.inc";
+require "Babs/sessions.inc";
+require "Babs/stories.inc";
+require "Babs/str.inc";
+require "Babs/templates.inc";
+require "Babs/udf.inc";
+require "Babs/users.inc";
+require "Babs/xml.inc";
 
 sub DESTROY
 {

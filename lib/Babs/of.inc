@@ -1,7 +1,7 @@
 # Babs output-formatting routines
 # $Id$
 
-use POSIX qw();
+use POSIX ();
 
 # Should this be a template?
 sub of_login_form
@@ -52,7 +52,7 @@ sub of_close_window
 	my ($this, $title) = @_;
 
 	my $data = $this->encode_slashes($this->{of}->link(value=>$title,
-			href=>"#", onclick=>"window.close()");
+			href=>"#", onclick=>"window.close()"));
 
 	return	qq{<script type="text/javascript">} .
 		"document.write('$data')" .
@@ -63,7 +63,7 @@ sub of_popup
 {
 	my ($this, $value, $href) = @_;
 	$href = $this->encode_slashes($href);
-	my $name = "babs" . $this->random_str(8, RAND_ALNUM);
+	my $name = "babs" . $this->random_str(8, Babs::RAND_VIS_ALNUM);
 	return $this->{of}->link(value=>$value, href=>$href,
 		onclick=>"window.open('$href', '$name', 'width=500,height=300'); return false;");
 }
@@ -86,8 +86,8 @@ sub of_js_pms
 sub of_nav_menu
 {
 	my ($this, %prefs) = @_;
-	my $offset	= $prefs{offset} && $prefs{offset} ~= /^\d+$/ ? $prefs{offset} : 0;
-	my $total	= $prefs{total}  && $prefs{total}  ~= /^\d+$/ ? $prefs{total}  : 0;
+	my $offset	= $prefs{offset} && $prefs{offset} =~ /^\d+$/ ? $prefs{offset} : 0;
+	my $total	= $prefs{total}  && $prefs{total}  =~ /^\d+$/ ? $prefs{total}  : 0;
 	my %url_prefs	= %{ $prefs{url} };
 	my $action	= $prefs{action};
 	my $limit	= $this->result_limit;
@@ -97,43 +97,44 @@ sub of_nav_menu
 	$offset		= 0 if $offset >= $total;
 	if ($offset > $limit)
 	{
-		$output .=	$of->link("First",	$this->build_url($action, %$url_prefs, offset=>0)) . " | " .
-				$of->link("Previous",	$this->build_url($action, %$url_prefs, offset=>$offset-$limit)) . " | ";
+		$output .=
+			$of->link("First",	$this->build_url($action, %url_prefs, offset=>0)) . " | " .
+			$of->link("Previous",	$this->build_url($action, %url_prefs, offset=>$offset-$limit)) . " | ";
 	} else {
 		$output .= "First | Previous ";
 	}
 	my $page	= POSIX::floor($offset / $limit);
 	my $last_page	= POSIX::ceil($total / $limit);
 	my $start	= 0;
-	if ($page < $page_limit/2)
+	if ($page < $plimit/2)
 	{
 		# The "left boundary" exists when we can't evenly
 		# distribute "previous page" links.
 		$start = 0;
-	} elsif ($page > $last_page - ceil($page_limit/2)) {
+	} elsif ($page > $last_page - ceil($plimit/2)) {
 		# The "right boundary" exists when we can't
 		# evenly distribute "next page" links.
-		$start = $last_page - $page_limit;
+		$start = $last_page - $plimit;
 	} else {
-		$start = $page - floor($page_limit/2);
+		$start = $page - floor($plimit/2);
 	}
-	for (my $i = $start; $i < $start + $page_limit && $i < $last_page; $i++)
+	for (my $i = $start; $i < $start + $plimit && $i < $last_page; $i++)
 	{
 		if ($i == $page)
 		{
 			$output .= $of->strong($i+1) . " | ";
 		} else {
-			$output .= $of->link($i+1, $this->build_url($action, %$url_prefs, offset=>$i*$limit)) . " | ";
+			$output .= $of->link($i+1, $this->build_url($action, %url_prefs, offset=>$i*$limit)) . " | ";
 		}
 	}
 	if ($offset + $limit < $total)
 	{
-		$output .=	$of->link("Next", $this->build_url($action, %$url_prefs, offset=>$offset+$limit)) . " | " .
-				$of->link("Last", $this->build_url($action, %$url_prefs, offset=>$total-$limit));
+		$output .=	$of->link("Next", $this->build_url($action, %url_prefs, offset=>$offset+$limit)) . " | " .
+				$of->link("Last", $this->build_url($action, %url_prefs, offset=>$total-$limit));
 	} else {
 		$output .= "Next | Last";
 	}
 	return $output;
 }
 
-return 1;
+return Babs::TRUE;

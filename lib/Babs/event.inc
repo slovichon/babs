@@ -48,4 +48,4 @@ sub event_register
 	}
 }
 
-return 1;
+return Babs::TRUE;

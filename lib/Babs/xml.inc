@@ -172,6 +172,7 @@ sub xml_add
 		}
 	} elsif ($type == XML_STORY_ARCHIVES) {
 		my $newnode = $doc->createElement("item");
+		my $url = $this->build_url(PATH_ABS, "view", story_id=>$data->{story_id});
 
 		$newnode->setAttribute("rdf:about", $url);
 
@@ -294,4 +295,4 @@ sub xml_setup
 	}
 }
 
-return 1;
+return Babs::TRUE;

@@ -13,4 +13,4 @@
 
 
 
-return 1;
+return Babs::TRUE;

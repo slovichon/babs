@@ -108,9 +108,9 @@ sub _str_remove_css
 	my @stack = ();
 	my $len = length $str;
 	my $ch;
-	my $dquot = FALSE;
-	my $squot = FALSE;
-	my $esc = FALSE;
+	my $dquot = Babs::FALSE;
+	my $squot = Babs::FALSE;
+	my $esc = Babs::FALSE;
 
 	for (my $i = 0; $i < $len; $i++)
 	{
@@ -138,7 +138,7 @@ sub _str_remove_css
 		} elsif ($ch eq '\\') {
 			$esc = !$esc;
 		} else {
-			$esc = FALSE;
+			$esc = Babs::FALSE;
 		}
 	}
 
@@ -343,4 +343,4 @@ sub str_parse
 	return $str;
 }
 
-return 1;
+return Babs::TRUE;

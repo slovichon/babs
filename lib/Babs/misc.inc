@@ -24,12 +24,12 @@ use constant EMAIL_CHK_NONE	=> 3;
 sub valid_email
 {
 	my ($this, $email) = @_;
-	return FALSE unless defined $email;
-	return FALSE unless $email =~ /^.+@(.+)$/;
+	return Babs::FALSE unless defined $email;
+	return Babs::FALSE unless $email =~ /^.+@(.+)$/;
 	my $host = $1;
 	return checkmx($host)			if $this->{email_check} == EMAIL_CHK_MX;
 	return defined gethostbyname($host)	if $this->{email_check} == EMAIL_CHK_HOST;
-	return TRUE;
+	return Babs::TRUE;
 }
 
 sub hasheq
@@ -45,7 +45,7 @@ sub hasheq
 			delete $dup{$k};
 		} else {
 			# Field doesn't exist; hashes aren't equal
-			return FALSE;
+			return Babs::FALSE;
 		}
 	}
 	# They're equal if we removed all the fields and none remain
@@ -246,4 +246,4 @@ sub page_limit
 	return $limit;
 }
 
-return 1;
+return Babs::TRUE;

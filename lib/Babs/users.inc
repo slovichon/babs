@@ -17,7 +17,7 @@ use constant E_USER_EXIST	=> (040<<7); # Non-existant user
 sub user_add
 {
 	my ($this, $user) = @_;
-	my $err = E_NONE;
+	my $err = Babs::E_NONE;
 	my $dbh = $this->{dbh};
 
 	# Validate info
@@ -25,10 +25,10 @@ sub user_add
 	$err |= E_USER_PASS	unless $user->{password} && length($user->{password}) < 6;
 	$err |= E_USER_EMAIL	unless $this->valid_email($user->{email});
 	$err |= E_USER_TYPE	unless $user->{type} && $user->{type} =~ /^\d+$/;
-	
+
 	# Validate unique username
 	my $t = $dbh->prepare_str($user->{username}, SQL_REG);
-	
+
 	$err |= E_USER_NAME_USE if $dbh->query("	SELECT
 								username
 							FROM
@@ -37,12 +37,13 @@ sub user_add
 								username = '$t'", DB_COL);
 
 	# Validate user-defined fields
-	my @uerr = $this->udf_validate(FLD_USER, $user);
+	my @uerr = $this->udf_validate(Babs::FLD_USER, $user);
 
-	return [$err, @uerr] if $err != E_NONE || @uerr;
+	return [$err, @uerr] if $err != Babs::E_NONE || @uerr;
 
 	# Prepare data
-	$user->{email}		= $dbh->prepare_str($this->str_parse($user->{email}, STR_NONE), SQL_REG);
+	$user->{email}		= $dbh->prepare_str($this->str_parse(
+					$user->{email}, Babs::STR_NONE), SQL_REG);
 	$user->{password}	= $dbh->prepare_str($this->crypt($user->{password}), SQL_REG);
 
 	my $sql_fields = "";
@@ -73,20 +74,20 @@ sub user_add
 				'$user->{type}'
 				$sql_values
 			)", DB_NULL);
-	return [E_NONE, ()];	
+	return [Babs::E_NONE];
 }
 
 sub user_update
 {
 	my ($this, $user) = @_;
-	my $err = E_NONE;
+	my $err = Babs::E_NONE;
 	my $dbh = $this->{dbh};
 
 =comment
 Notes:
- 	- If no new password is specified, don't change it.
-	
- 	- We obviously cannot print the concurrent password
+	- If no new password is specified, don't change it.
+
+	- We obviously cannot print the concurrent password
 	out as the default field value.
 
 	- Usernames cannot be changed.
@@ -109,7 +110,7 @@ Notes:
 	my $sql = "	UPDATE
 				babs_users
 			SET ";
-	
+
 	# Once again, only update the password if its been changed.
 	$sql .= "		password	= '$user->{password}', " if $user->{password};
 
@@ -118,7 +119,7 @@ Notes:
 	{
 		$user->{$field_id} = $dbh->prepare_str($this->str_parse(
 					$user->{$field_id}, $field->{parse}), SQL_REG);
-			
+
 		$sql .= "	ud_$field_id	= '$user->{$field_id}', ";
 	}
 
@@ -127,7 +128,7 @@ Notes:
 				type		= '$user->{type}'
 			WHERE
 				user_id		= '$user->{user_id}' ";
-	
+
 	$dbh->query($sql, DB_NULL);
 
 	return [E_NONE, ()];
@@ -200,4 +201,4 @@ sub user_exists
 						user_id = $user_id", DB_COL);
 }
 
-return 1;
+return Babs::TRUE;
