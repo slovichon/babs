@@ -1,4 +1,4 @@
-# udf.inc - Babs user-defined fields routines
+# Babs user-defined fields routines
 # $Id$
 # Notes:
 #	- User-defined fields exist in the database

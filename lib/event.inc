@@ -1,4 +1,4 @@
-# event.inc - Babs event routines
+# Babs event routines
 # $Id$
 
 use constant EVT_STORY_ADD	=> 1;

@@ -1,4 +1,4 @@
-# sessions.inc - Babs session routines
+# Babs session routines
 # $Id$
 
 

@@ -1,4 +1,4 @@
-# template.inc - Babs template routines
+# Babs template routines
 # $Id$
 
 sub template_expand

@@ -1,4 +1,4 @@
-# users.inc - Babs user routines
+# Babs user routines
 # $Id$
 
 # User levels

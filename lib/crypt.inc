@@ -1,4 +1,4 @@
-# crypt.inc
+# Babs cryptographic routines
 # $Id$
 
 use constant BABS_RAND_ALNUM => 1;

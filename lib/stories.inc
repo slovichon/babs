@@ -1,4 +1,4 @@
-# stories.inc - Babs story routines
+# Babs story routines
 # $Id$
 
 use constant E_STORY_HEADLINE	=> (001<<14); # No headline

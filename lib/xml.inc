@@ -1,4 +1,4 @@
-# xml.inc - Babs XML routines
+# Babs XML routines
 # $Id$
 
 use XML::DOM;

@@ -1,4 +1,4 @@
-# comments.in - Babs comment routines
+# Babs comment routines
 # $Id$
 
 use constant E_COMMENT_COM	=> (001<<0); # No comment field
