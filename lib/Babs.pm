@@ -1,11 +1,11 @@
-# Babs.pm - content management system
+# Babs.pm - news management system
 # $Id$
 package Babs;
 
 use Timestamp;
 use OF;
 use DBH qw(:all);
-#use Exporter;
+use Exporter;
 
 BEGIN {
 	if ($ENV{MOD_PERL})
@@ -18,8 +18,7 @@ BEGIN {
 }
 
 use strict;
-
-use constant TRUE  => 1;
+use constant TRUE => 1;
 use constant FALSE => 0;
 
 # Error constants
@@ -27,33 +26,21 @@ use constant E_NONE => 0;
 
 our $VERSION = 0.1;
 
-sub create
-{
-	return __PACKAGE__->new(
-		wasp		=> WASP->new(),
-		isapi		=> $ENV{MOD_PERL} ? Apache::Request->new(shift) : CGI->new(),
-		gen_class	=> 0,
-	);
-}
-
 sub new
 {
-	my ($class, %prefs) = @_;
+	my $class = shift;
+	my %prefs = (
+		wasp  => WASP->new(),
+		isapi => $ENV{MOD_PERL} ? Apache::Request->new(shift) : CGI->new(),
+	);
 
-	die("No WASP object specified")	unless $prefs{wasp};
-	die("No ISAPI specified")	unless $prefs{isapi};
-
-	# Strict-preference setting
-	tie %prefs, 'Babs::Prefs', %prefs;
-
-	# This should fill up %prefs
+	# Fill up %prefs
+	delete $INC{"babs-config.inc"} if exists $INC{"babs-config.inc"};
 	require "babs-config.inc";
 
-	my $this = bless \%prefs, ref($class) || $class;
-	
 	# Initialize DBH
 	{
-		my %args = (wasp=>$this->{wasp});
+		my %args = (wasp => $prefs{wasp});
 		my %map = (
 			host		=> "dbh_host",
 			username	=> "dbh_username",
@@ -65,23 +52,48 @@ sub new
 		my ($k, $v);
 		while (($k, $v) = each %map)
 		{
-			$args{$k} = $this->{$v} if exists $this->{$v};
+			$args{$k} = $prefs{$v} if exists $prefs{$v};
 		}
-		$this->{dbh} = &{$this->{dbh_type}}(*{$this->{dbh_type}}{PACKAGE},
-			%args);
+		$prefs{dbh} = &{$prefs{dbh_type}}(
+				*{$prefs{dbh_type}}{PACKAGE}, %args);
 	}
 
 	# Initialize OF
 	{
 		# Load OF prefs
 		my %of_prefs = ();
-		$this->{of} = &{$this->{of_type}}(*{$this->{of_type}}{PACKAGE},
-			$this->{wasp}, \%of_prefs);
+		$prefs{of} = &{$prefs{of_type}}(*{$prefs{of_type}}{PACKAGE},
+			$prefs{wasp}, \%of_prefs);
 	}
+
+	return construct($class, %prefs);
+}
+
+sub construct
+{
+	my ($class, %prefs) = @_;
+
+	# Error-check our environment
+	die("No WASP object specified")	unless $prefs{wasp};
+	$prefs{wasp}->throw("No ISAPI specified")	unless $prefs{isapi};
+	$prefs{wasp}->throw("No DBH specified")		unless $prefs{dbh};
+	$prefs{wasp}->throw("No OF specified")		unless $prefs{of};
+
+	# Strict-preference setting
+	tie %prefs, 'Babs::Prefs', %prefs;
+
+	# This should fill up %prefs
+	delete $INC{"babs-config.inc"} if exists $INC{"babs-config.inc"};
+	require "babs-config.inc";
+
+	my $this = bless \%prefs, ref($class) || $class;
 
 	# Propagate construction
 	$this->_xml_init();
 	$this->_udf_init();
+
+	# Property definition
+	$this->{gen_class} = 0;
 
 	return $this;
 }
@@ -89,7 +101,7 @@ sub new
 sub throw
 {
 	my ($this) = shift;
-	my $msg = "Babs error: " . join '', @_;
+	my $msg = "Babs Error: " . join '', @_;
 
 	if ($this->{mail_errors})
 	{
@@ -100,9 +112,14 @@ sub throw
 	# Try to display prettily
 	# $this->template_get();
 	# $this->template_get();
-	
+
 	$this->{wasp}->throw($msg);
 }
+
+# Access to some properties
+sub of		{ $_[0]->{of} }
+sub isapi	{ $_[0]->{isapi} }
+sub dbh		{ $_[0]->{dbh} }
 
 require "comments.inc";
 require "crypt.inc";
