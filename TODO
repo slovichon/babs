@@ -13,3 +13,5 @@ remove the users table, one already exists in thraxx (that is what thraxx is
 	for)
 	- make udf more generic: comments.inc and stories.inc (and users.inc
 	  in thraxx) will be removed
+change OF to add ?session_id= for links
+set $babs->{session_id} in require_login() or perhaps __session_init()
