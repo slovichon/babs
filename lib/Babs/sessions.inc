@@ -19,7 +19,7 @@ sub session_require_login
 	my ($this, $priv) = @_;
 	# Default is to see whether user is logged in,
 	# regardless of privileges
-	$priv = USER_LVL_COMMENTER unless $priv;
+	$priv = USER_LVL_COMMENTER() unless $priv;
 	my $user_id = $this->session_is_logged_in;
 	if ($user_id)
 	{
@@ -40,18 +40,20 @@ sub session_require_login
 sub session_is_logged_in
 {
 	my ($this) = @_;
+	my $user_id;
 	# Determine if the user is logged in according
 	# to AUTH_TYPE and a valid session exists.
-	return $user_id;
+	return $user_id if $user_id;
 	return undef;
 }
 
 sub session_logout
 {
+	my ($this) = @_;
 	if ($this->session_is_logged_in)
 	{
 	} else {
-		return E_SESSION_NOREC;
+		return E_SESSION_NOREC();
 	}
 }
 
