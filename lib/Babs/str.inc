@@ -3,6 +3,12 @@
 
 use strict;
 
+sub escape_html {
+	my ($this, $str) = @_;
+	$str = "" unless defined $str;
+	return $this->{cgi}->escapeHTML($str);
+}
+
 # sub encode_http {
 #	my ($this, $data) = @_;
 #	$data =~ s/[^a-zA-Z0-9]/"%" . unpack("H", $1)/ge;
