@@ -50,4 +50,43 @@ sub hasheq
 	return %dup == ();
 }
 
+use constant PATH_ABS	=> 1;
+use constant PATH_REL	=> 2;
+use constant PATH_SYS	=> 3;
+
+sub build_url
+{
+	my ($this) = shift;
+	# Default to PATH_REL if none is specified
+	my $type = grep {$_ == $_[0]} (PATH_ABS PATH_REL PATH_ABS) ? shift : PATH_REL;
+	my ($file, %args) = @_;
+	my $url = $this->build_path($type) . $file . ".pl?";
+	my ($k, $v);
+	while (($k, $v) = each %args)
+	{
+		$url .= $k . "=" . $this->http_encode($v) . "&";
+	}
+	# Remove trailing '&'
+	$url =~ s/&$//;
+	return $url;
+}
+
+sub build_path
+{
+	my ($this, $type) = @_;
+	$type = PATH_REL unless defined $type;
+	   if ($type == PATH_ABS) { return $this->{site_uri} . $this->{web_root} . $this->{path}; }
+	elsif ($type == PATH_REL) { return $this->{web_root} . $this->{path}; }
+	elsif ($type == PATH_SYS) { return $this->{sys_root} . $this->{sys_path}; }
+	else {
+		$this->throw("Unrecognized path type; type: $type");
+	}
+}
+
+sub http_encode
+{
+	my ($this, $data) = @_;
+	return $this->{}
+}
+
 return 1;
