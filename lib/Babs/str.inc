@@ -1,27 +1,43 @@
-# Babs string routines
 # $Id$
 
+=head2 String Routines
+
+This sub-module provides a set of miscellaneous string-manipulation
+routines.
+
+=over
+
+=cut
+
 use strict;
+use warnings;
 
-sub escape_html {
-	my ($this, $str) = @_;
-	$str = "" unless defined $str;
-	return $this->{cgi}->escapeHTML($str);
-}
-
-# sub encode_http {
+# sub escape_http {
 #	my ($this, $data) = @_;
 #	$data =~ s/[^a-zA-Z0-9]/"%" . unpack("H", $1)/ge;
 #	return $data;
 # }
 
-# sub decode_http {
+# sub unescape_http {
 #	my ($this, $data) = @_;
 #	$data =~ s/%(\d\d)/pack("H", $1)/ge;
 #	return $data;
 # }
 
-# sub encode_html {
+=item C<< $escaped = $babs->escape_html($str); >>
+
+This method converts every character that is illegal in HTML to
+its entity representation.
+
+=cut
+
+sub escape_html {
+	my ($this, $str) = @_;
+	return "" unless defined $str;
+	return $this->{cgi}->escapeHTML($str);
+}
+
+# sub escape_html {
 #	my ($this, $data) = @_;
 #	my %tbl = (
 #		'"' => "quot",
@@ -35,7 +51,7 @@ sub escape_html {
 #	return $data;
 # }
 
-# sub decode_html {
+# sub unescape_html {
 #	my ($this, $data) = $_;
 #	my %tbl = (
 #		"quot"	=> '"',
@@ -49,17 +65,35 @@ sub escape_html {
 #	return $data;
 # }
 
-sub encode_slashes {
-	my ($this, $data) = @_;
-	$data =~ s/['"\\]/\\$&/g;
-	return $data;
+=item C<< $escaped = $babs->escape_slashes($str); >>
+
+This method provides backslash escaping for every backslash
+or quote character.
+
+=cut
+
+sub escape_slashes {
+	my ($this, $str) = @_;
+	$str =~ s/['"\\]/\\$&/g;
+	return $str;
 }
 
-sub decode_slashes {
-	my ($this, $data) = @_;
-	$data =~ s/(?<=\\)['"\\]/$&/g;
-	return $data;
+=item C<< $unescape = $babs->unescape_slashes($str); >>
+
+This method removes backslash escaping for every escaped
+backslash or quote character it finds.
+
+=cut
+
+sub unescape_slashes {
+	my ($this, $str) = @_;
+	# This may be wrong.  It seems like it would
+	# unescape all slashes, given `\\.'
+	$str =~ s/(?<=\\)['"\\]/$&/g;
+	return $str;
 }
+
+=cut
 
 # This sub is used by str_parse() to clean up HTML
 # attributes. It has no other immediate usefulness
@@ -168,8 +202,74 @@ use constant STR_HTML	=> (1<<1);
 use constant STR_URL	=> (1<<2);
 use constant STR_ALL	=> STR_HTML | STR_URL;
 
+=item C<< $safe = $babs->str_parse($str, $flags); >>
+
+This methods parses and rebuilds a string for usage in several
+different circumstances.
+
+C<$flags> can be any of:
+
+=over
+
+=item C<STR_NONE>
+
+No special handling should be done.
+
+=item C<STR_HTML>
+
+I<HTML-parsing> should be performed. According to the Babs configuration
+settings, this can provide a variety of modifications. All HTML tags will
+be escaped and only tags that are specified in configuration will be
+allowed to remain unmodified. Through configuration settings, granularity
+of HTML attributes will be allowed or stripped, which could remove potentially
+dangerous attributes, such as C<style>.
+
+XXX: explain pertinent configuration options, and link allowance.
+
+=item C<STR_URL>
+
+I<Auto-URLing> should be performed. Auto-URLing is a feature where sections
+of text that look like hyperlinks will be converted into hyperlink anchors,
+giving the effect of link autovivification.
+
+XXX: explain pertinent configuration options.
+
+=back
+
+The following shortcut values are also defined.
+
+=over
+
+=item C<STR_ALL>
+
+This shortcut specifies that C<STR_HTML> and C<STR_URL> should be used.
+This is the default value for C<$flags> if no value is specified.
+
+=back
+
+Regardless of special handling, the following operations will additionally
+(or exclusively) occur.
+
+=over
+
+=item Word breakage
+
+Long words will be broken up so that page displays are not ruined by long
+sequences of characters.
+
+=item Newline rewriting
+
+Newlines (i.e., end-of-line denotations) of most imaginable types will
+be converted to common HTML C<br> tags.
+
+=back
+
+=cut
+
 sub str_parse {
 	my ($this, $str, $flags) = @_;
+	
+	$flags = STR_ALL unless defined $flags;
 	
 	$str = $this->encode_html($str);
 
