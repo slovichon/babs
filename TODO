@@ -6,3 +6,4 @@ in the story/comment/user prepare routines, there is DBH::prepare_str() on
 default template add
 	size (xxx Kilobytes)
 	est. reading time (size/readrate=num of min)
+add random field in story post to prevent batch posting?
