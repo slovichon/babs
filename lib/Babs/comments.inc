@@ -23,7 +23,7 @@ sub _comment_init {
 	$g->add("E_COMMENT_MAX");	# Max comments reached
 }
 
-=item C<< ($err, $uerr) = $babs->comment_add($comment); >>
+=item C<< ($err, $uerr) = $babs->comment_add(\%comment); >>
 
 This routine adds the argued comment to the database.
 The return value is an array containing two values.
@@ -170,7 +170,7 @@ sub comment_add {
 	return (E_NONE(), []);
 }
 
-=item C<< ($err, $uerr) = $babs->comment_update($comment); >>
+=item C<< ($err, $uerr) = $babs->comment_update(\%comment); >>
 
 This routine updates the argued comment to the database.
 The return value is an array containing two values.
@@ -369,7 +369,7 @@ sub comment_get {
 	return \%comment;
 }
 
-=item C<< $ids = $babs->comment_get_ancesters($needle, $hay); >>
+=item C<< $ids = $babs->comment_get_ancesters($needle, \%hay); >>
 
 This method returns an array reference containing comment identifiers
 for every ancestor of the argued comment.

@@ -29,7 +29,7 @@ use constant EVT_UDF_UPDATE	=> 10;
 
 use constant _EVT_MAX		=> 10;
 
-=item $babs->event_fire($type, @args);
+=item C<< $babs->event_fire($type, @args); >>
 
 This method fires the target event. Available events include:
 
@@ -108,7 +108,7 @@ sub event_fire {
 	}
 }
 
-=item $babs->event_has($type);
+=item C<< $babs->event_has($type); >>
 
 This method determines if the argued event type has been registered for
 event propagation handling.
@@ -122,7 +122,7 @@ sub event_has {
 	return ref $this->{events}[$type] eq "ARRAY" && @{ $this->{events}[$type] };
 }
 
-=item $babs->event_register($type, $action);
+=item C<< $babs->event_register($type, $action); >>
 
 This method registers an event for the specified action. The action and
 all others previously and hereafter specified will be performed when the

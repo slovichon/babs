@@ -11,7 +11,7 @@ This sub-module provides database-related methods.
 use strict;
 use warnings;
 
-=item $babs->dbh_selectcol($stmt, @bindvals);
+=item C<< $babs->dbh_selectcol($stmt, @bindvals); >>
 
 This method is essentially a wrapper around C<DBI::selectcol_arrayref()>.
 See L<DBI> for more information.
@@ -30,13 +30,13 @@ sub dbh_selectcol {
 	return ref $ret eq "HASH" && defined $ret->[0] ? $ret->[0] : "";
 }
 
-=item
-
 use constant SQL_REG	=> 1;
 use constant SQL_WILD	=> 2;
 use constant SQL_RE	=> 3;
 use constant SQL_REGEXP	=> SQL_RE();
 use constant SQL_REGEX	=> SQL_RE();
+
+=item C<< $safe = $babs->dbh_quote($unsafe, $type); >>
 
 =cut
 
