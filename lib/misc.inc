@@ -30,4 +30,24 @@ sub valid_email
 	return TRUE;
 }
 
+sub hasheq
+{
+	my ($a, $b) = @_;
+	my %dup = %$a;
+	my ($k, $v);
+	while (($k, $v) = each %$b)
+	{
+		if (exists $dup{$k} && $dup{$k} eq $b->{$k})
+		{
+			# Remove the field if it exists
+			delete $dup{$k};
+		} else {
+			# Field doesn't exist; hashes aren't equal
+			return FALSE;
+		}
+	}
+	# They're equal if we removed all the fields and none remain
+	return %dup == ();
+}
+
 return 1;
