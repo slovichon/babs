@@ -1,6 +1,8 @@
 # Babs string routines
 # $Id$
 
+use strict;
+
 sub encode_http
 {
 	my ($this, $data) = @_;

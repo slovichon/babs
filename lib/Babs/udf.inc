@@ -7,6 +7,7 @@
 #	keywords.
 
 use Storable;
+use strict;
 
 use constant FLD_USER		=> 1;
 use constant FLD_STORY		=> 2;

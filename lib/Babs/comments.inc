@@ -1,6 +1,8 @@
 # Babs comment routines
 # $Id$
 
+use strict;
+
 sub _comment_init
 {
 	my ($this) = @_;

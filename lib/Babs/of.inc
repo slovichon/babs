@@ -1,6 +1,8 @@
 # Babs output-formatting routines
 # $Id$
 
+use strict;
+
 use POSIX ();
 
 # Should this be a template?

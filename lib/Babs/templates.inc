@@ -1,6 +1,8 @@
 # Babs template routines
 # $Id$
 
+use strict;
+
 sub template_expand
 {
 	my ($__this, $__type, $__args) = @_;

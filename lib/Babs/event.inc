@@ -1,6 +1,8 @@
 # Babs event routines
 # $Id$
 
+use strict;
+
 use constant EVT_STORY_ADD	=> 1;
 use constant EVT_STORY_UPDATE	=> 2;
 use constant EVT_STORY_REMOVE	=> 3;

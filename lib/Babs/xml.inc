@@ -2,6 +2,8 @@
 # $Id$
 
 use XML::DOM;
+use strict;
+
 use constant XML_STORY_RECENT	=> 1;
 use constant XML_STORY_ARCHIVES	=> 2;
 

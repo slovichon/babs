@@ -1,6 +1,8 @@
 # Babs cryptographic routines
 # $Id$
 
+use strict;
+
 use constant RAND_VIS_ALNUM	=> 1;
 use constant RAND_VIS_NQ	=> 2;
 

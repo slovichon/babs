@@ -1,6 +1,8 @@
 # Babs miscellaneous routines
 # $Id$
 
+use strict;
+
 use File::Copy ();
 
 sub slurp_file

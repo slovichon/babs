@@ -1,6 +1,8 @@
 # Babs story routines
 # $Id$
 
+use strict;
+
 sub _story_init
 {
 	my ($this) = @_;

@@ -1,6 +1,8 @@
 # Babs user routines
 # $Id$
 
+use strict;
+
 # User levels
 use constant USER_LVL_COMMENTER	=> 1;
 use constant USER_LVL_REGULAR	=> 2;
