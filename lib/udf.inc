@@ -12,6 +12,12 @@ use constant FLD_USER		=> 1;
 use constant FLD_STORY		=> 2;
 use constant FLD_COMMENT	=> 3;
 
+sub _udf_init
+{
+	my $this = shift;
+	$this->udf_update unless $this->{skip_init};
+}
+
 sub udf_validate
 {
 	my ($this, $type, $data) = @_;
@@ -67,7 +73,7 @@ sub udf_update
 					FROM
 						babs_config", DB_ROW);
 	my ($field_id, $field_sig, $old_fields);
-	while (($field_id, $field_sig) each %old_types)
+	while (($field_id, $field_sig) = each %old_types)
 	{
 		$old_fields = Storable::thaw($field_sig);
 		$old_fields = {} unless ref $old_fields eq "HASH";
@@ -94,9 +100,10 @@ sub udf_update_db
 		story_fields	=> "babs_stories",
 		comment_fields	=> "babs_comments",
 	);
-	
+
 	my ($id, $fields, @removed, %diff, $field_id,
-		$field, $new_field_id, $new_field);
+		$field, $new_field_id, $new_field, %sigs);
+
 	while (($id, $old_fields) = each %$changed)
 	{
 		# Removed fields
@@ -135,66 +142,37 @@ sub udf_update_db
 						ud_$new_field_id $new_field->{database_type}", DB_NULL);
 		}
 
-		$
+		# Create signature on current/"next" fields
+		$sigs{$id} = $dbh->prepare_str(Storable::freeze($this->{$id}), SQL_REG);
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-			$sigs[$id] = $dbh->prepare_str(serialize($vars[$id]),SQL_REG);
-		}
-
-		# Update signatures
-		# Check to see if one already exists
-		if ($dbh->query("	SELECT
-						COUNT(*)
-					FROM
-						newsys_config",DB_COL))
-		{
-			$dbh->query("	UPDATE
-						newsys_config
-					SET
-						user_fields_sig		= '{$sigs["user"]}',
-						story_fields_sig	= '{$sigs["story"]}',
-						comment_fields_sig	= '{$sigs["comment"]}'",DB_NULL);
-		} else {
-			$dbh->query("	INSERT INTO
-						newsys_config
-					(
-						user_fields_sig,
-						story_fields_sig,
-						comment_fields_sig
-					) VALUES (
-						'{$sigs["user"]}',
-						'{$sigs["story"]}',
-						'{$sigs["comment"]}'
-					)",DB_NULL);
-		}
-
-		return;
+	# Update signatures
+	if ($dbh->query("	SELECT
+					COUNT(*)
+				FROM
+					babs_config", DB_COL))
+	{
+		# Already exists; update
+		$dbh->query("	UPDATE
+					babs_config
+				SET
+					user_fields_sig		= '$sigs{user_fields}',
+					story_fields_sig	= '$sigs{story_fields}',
+					comment_fields_sig	= '$sigs{comment_fields}'", DB_NULL);
+	} else {
+		# Doesn't exist; insert
+		$dbh->query("	INSERT INTO
+					babs_config
+				(
+					user_fields_sig,
+					story_fields_sig,
+					comment_fields_sig
+				) VALUES (
+					'$sigs{user_fields}',
+					'$sigs{story_fields}',
+					'$sigs{comment_fields}'
+				)", DB_NULL);
 	}
-?>
-
-
-
-	
 }
 
 return 1;
