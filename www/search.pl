@@ -34,21 +34,20 @@ sub num_in_array {
 }
 
 my $babs  = Babs->new(shift);
-my $cgi   = $babs->{cgi};
 my $oof   = $babs->{oof};
 
 my ($template, @params, @op, @val, $sort, $order, $show, $offset);
 
-$template = $cgi->param("template");
+$template = $babs->req("template");
 
 if ($babs->template_exists($template)) {
-	@param  = $cgi->param("param")	|| ();
-	@op	= $cgi->param("op")	|| ();
-	@val	= $cgi->param("val")	|| ();
-	$sort   = $cgi->param("sort")	|| "";
-	$order  = $cgi->param("order")	|| "";
-	$show   = $cgi->param("show")	|| 0;
-	$offset = $cgi->param("offset")	|| 0;
+	@param  = $babs->req("param")	|| ();
+	@op	= $babs->req("op")	|| ();
+	@val	= $babs->req("val")	|| ();
+	$sort   = $babs->req("sort")	|| "";
+	$order  = $babs->req("order")	|| "";
+	$show   = $babs->req("show")	|| 0;
+	$offset = $babs->req("offset")	|| 0;
 
 	# Only use valid parameters.
 	# @params

@@ -7,12 +7,11 @@ use strict;
 use warnings;
 
 my $babs = Babs->new(shift);
-my $cgi = $babs->{cgi};
 
-my $template = $cgi->param("template") || "";
+my $template = $babs->req("template") || "";
 $template = "story" unless $babs->valid_template("story", $template);
 
-my $story_id = $cgi->param("story_id") || 0;
+my $story_id = $babs->req("story_id") || 0;
 $story_id = 0 unless $story_id && $story_id =~ /^\d+$/;
 
 if (my $story = $babs->template_expand($template, {story_id => $story_id})) {
