@@ -187,7 +187,8 @@ sub build_path {
 
 =item C<< $exists = $babs->in_array($needle, \@hay); >>
 
-
+This method determines whether the argued C<$needle>
+appears in the array referred to by C<\@hay>.
 
 =cut
 
@@ -203,6 +204,9 @@ sub in_array {
 
 =item C<< $class = $babs->gen_class(); >>
 
+This method generates a CSS class name for alternating
+rows in a table.
+
 =cut
 
 sub gen_class {
@@ -210,7 +214,10 @@ sub gen_class {
 	return "BabsData" . (1 + ($this->{gen_class} = !$this->{gen_class}));
 }
 
-=item C<< $babs->file_move(); >>
+=item C<< $babs->file_move($src, $dst); >>
+
+This method moves the file C<$src> to the location C<$dst>, regardless
+of any filesystem boundaries.
 
 =cut
 
@@ -223,7 +230,9 @@ sub file_move {
 	$this->file_remove($src);
 }
 
-=item C<< $babs->file_remove(); >>
+=item C<< $babs->file_remove($filename); >>
+
+This methods attempts to remove the file C<$filename>.
 
 =cut
 
@@ -234,20 +243,53 @@ sub file_remove {
 	}
 }
 
-# Sends actual mail (lower level); use wrapper
-# mail() for checking/error-handling instead
+# This method actually sends mail (lower level).
+# The wrapper mail() should be used for checking/
+# error-handling.
 sub _mail {
 	my ($this, %args) = @_;
 
 	# Strip potential CLRFs from header
-	$args{from}	=~ s/\r\n|[\r\n]//g;
-	$args{subject}	=~ s/\r\n|[\r\n]//g;
-	$args{to}	=~ s/\r\n|[\r\n]//g;
+	$args{from}	=~ s/\r\n|[\n\r]//g;
+	$args{subject}	=~ s/\r\n|[\n\r]//g;
+	$args{to}	=~ s/\r\n|[\n\r]//g;
 
-	
+	local *MAIL;
+	open MAIL, "| /usr/sbin/sendmail -t";
+	print MAIL <<EOM;
+To: $args{to}
+From: $args{from}
+Subject: $args{subject}
+
+$args{body}
+EOM
+	close MAIL;
 }
 
-=item C<< $babs->mail(); >>
+=item C<< $babs->mail(%args); >>
+
+This method sends an e-mail with parameters as specified
+by C<%args>.  They include:
+
+=over
+
+=item to
+
+This specifies the destination ("To") e-mail address field.
+
+=item from
+
+This specifies the source ("From") e-mail address field.
+
+=item subject
+
+This specifies the e-mail subject field.
+
+=item body
+
+This specifies the body of the e-mail message.
+
+=back
 
 =cut
 
@@ -260,6 +302,9 @@ sub mail {
 
 =item C<< $url = $babs->get_url(); >>
 
+This method determines the URI to the page from which it is
+being called.
+
 =cut
 
 sub get_url {
@@ -269,7 +314,11 @@ sub get_url {
 
 =item C<< $babs->redirect($url); >>
 
-=item
+This method redirects the user to the specified URL.  C<$url>
+may be relative or absolute.  Page execution will immediately
+halt after calling this routine.
+
+=cut
 
 sub redirect {
 	my ($this, $url) = @_;
@@ -291,7 +340,11 @@ sub redirect {
 	exit(0);
 }
 
-=item C<< $equal = $babs>arrayeq(\@a, \@b); >>
+=item C<< $equal = $babs->arrayeq(\@a, \@b); >>
+
+This method determines the equality of the arrays to which the
+argued array references refer.  This method does not honor
+C<$[>
 
 =cut
 
@@ -304,12 +357,20 @@ sub arrayeq {
 	}
 
 	# Make sure one array doesn't contain more items than the other
+	# return $#$a == $#$b;
 	return @$b == $i;
 }
 
-# Reads from post data. Also checks if the HTTP_REFERER
-# is valid (i.e., originating from the host that created
-# the previous page) if set to do so.
+=item C<< $value = $babs->post($name); >>
+
+This method returns the value for a name/value pair from the POST
+data.  An additional check to make sure the HTTP_REFERER points
+back to a page that originated from the same Web site is made,
+although this provides no real security, if the Babs configuration
+option C<check_http_referer> is turned on.
+
+=cut
+
 sub post {
 	my ($this, $var) = @_;
 	return undef if $this->{check_http_referer} && !$this->valid_referer;
@@ -317,10 +378,27 @@ sub post {
 	return $this->{cgi}->param($var);
 }
 
+=item C<< $value = $babs->req($name); >>
+
+This method returns the value for a name/value pair from all data
+(i.e., the query string or POST data).
+
+=cut
+
 sub req {
 	my ($this, $var) = @_;
 	return $this->{cgi}->param($var);
 }
+
+=item C<< $looks_valid = $babs->valid_referer(); >>
+
+This method provides a simple check to see if the referring
+page, i.e., the page which led the user to the current one,
+points back to the same Web site on which the current page
+resides.  Keep in mind that this method provides no real
+security.
+
+=cut
 
 sub valid_referer {
 	my ($this) = @_;
@@ -329,8 +407,17 @@ sub valid_referer {
 	return $this->{valid_referer} = $this->{cgi}->referer =~ /^\Q$this->{site_uri}/;
 }
 
+=item C<< $id = $babs->help_id($item); >>
+
+This method determines the help item identification number
+for the help item with the title C<$item> for use in the
+recommended pages. Zero (C<0>) is returned if no such help
+item is found.
+
+=cut
+
 sub help_id {
-	my ($this, $id) = @_;
+	my ($this, $item) = @_;
 	my %map = (
 		"overview break"	=> 101,
 		"auto-urls"		=> 102,
@@ -341,9 +428,15 @@ sub help_id {
 		"password confirm"	=> 107,
 	);
 
-	return 0 unless exists $map{$id};
-	return $map{$id};
+	return 0 unless exists $map{$item};
+	return $map{$item};
 }
+
+=item C<< $babs->result_limit >>
+
+XXX
+
+=cut
 
 sub result_limit {
 	my ($this, $try) = @_;
@@ -351,6 +444,12 @@ sub result_limit {
 	$limit = $try if $try && $try <= $this->{max_result_limit};
 	return $limit;
 }
+
+=item C<< $babs->page_limit >>
+
+XXX
+
+=cut
 
 sub page_limit {
 	my ($this, $try) = @_;
