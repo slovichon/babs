@@ -13,7 +13,9 @@ use constant EVT_USER_ADD	=> 7;
 use constant EVT_USER_UPDATE	=> 8;
 use constant EVT_USER_REMOVE	=> 9;
 
-use constant _EVT_MAX		=> 9;
+use constant EVT_UDF_UPDATE	=> 10;
+
+use constant _EVT_MAX		=> 10;
 
 sub event_fire
 {
