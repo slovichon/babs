@@ -250,7 +250,7 @@ sub str_parse
 							$this->_str_check_proto($this->_str_clean_attr($3))
 
 							# Else it's OK
-							: TRUE
+							: TRUE()
 						) ?
 
 						# Format attribute
