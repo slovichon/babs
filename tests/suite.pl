@@ -6,15 +6,15 @@ use warnings;
 
 sub _ {
 	if ($_[0]) {
-		print "\033[1;40;32mTest succeeded\033[1;0;0m\n\n";
+		print "\033[1;32mTest succeeded\033[1;0;0m\n\n";
 	} else {
-		print "\033[1;40;31mTest failed!\033[1;0;0m\n\n";
+		print "\033[1;31mTest failed!\033[1;0;0m\n\n";
 		die;
 	}
 } 
 
 sub test {
-	print "\033[1;40;34m", @_, ":\033[1;0;0m\n";
+	print "\033[1;34m", @_, ":\033[1;0;0m\n";
 }
 
 my $w = WASP->new;
