@@ -20,8 +20,7 @@ sub slurp_file {
 use constant EMAIL_CHK_MX	=> 1;
 use constant EMAIL_CHK_NONE	=> 2;
 
-sub valid_email
-{
+sub valid_email {
 	my ($this, $email) = @_;
 	return FALSE() unless defined $email;
 	return FALSE() unless $email =~ /^.+@(.+)$/;
@@ -117,8 +116,7 @@ sub file_remove {
 
 # Sends actual mail (lower level); use wrapper
 # mail() for checking/error-handling instead
-sub _mail
-{
+sub _mail {
 	my ($this, %args) = @_;
 
 	# Strip potential CLRFs from header
