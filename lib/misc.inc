@@ -1,4 +1,4 @@
-# misc.inc - Miscellaneous Babs routines
+# Babs miscellaneous routines
 # $Id$
 
 use File::Copy ();
@@ -66,7 +66,7 @@ sub build_url
 	my ($k, $v);
 	while (($k, $v) = each %args)
 	{
-		$url .= $k . "=" . $this->http_encode($v) . "&";
+		$url .= $k . "=" . $this->encode_http($v) . "&";
 	}
 	# Remove trailing '&'
 	$url =~ s/&$//;
@@ -227,6 +227,22 @@ sub help_id
 
 	return 0 unless exists $map{$id};
 	return $map{$id};
+}
+
+sub result_limit
+{
+	my ($this, $try) = @_;
+	my $limit = $this->{default_result_limit};
+	$limit = $try if $try && $try <= $this->{max_result_limit};
+	return $limit;
+}
+
+sub page_limit
+{
+	my ($this, $try) = @_;
+	my $limit = $this->{default_page_limit};
+	$limit = $try if $try && $try <= $this->{max_page_limit};
+	return $limit;
 }
 
 return 1;
