@@ -4,21 +4,22 @@ use Babs;
 use strict;
 
 my $babs = Babs->new(shift);
+my $of = $babs->{of};
 
-my $user_id = $babs->isapi->param("user_id") || 0;
+my $user_id = $babs->{isapi}->param("user_id") || 0;
 
 if ($babs->user_exists($user_id))
 {
 	my $user = $babs->user_get($user_id);
 	print	$babs->header("User Profile"),
-		$babs->of->header("User Profile"),
+		$of->header("User Profile"),
 		$babs->template_expand("user", $user),
 		$babs->footer();
 
 } else {
 	print	$babs->header("Error"),
-		$babs->of->header("Error"),
-		$babs->of->p("The requested user could not be found."),
+		$of->header("Error"),
+		$of->p("The requested user could not be found."),
 		$babs->footer();
 }
 

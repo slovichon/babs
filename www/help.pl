@@ -4,7 +4,8 @@ use Babs;
 use strict;
 
 my $babs = Babs->new(shift);
-my $help_id = $babs->isapi->param('help_id') || 0;
+my $of = $babs->{of};
+my $help_id = $babs->{isapi}->param('help_id') || 0;
 
 my ($title, @help) = @{{
 	101 => ["Error","No help information is available for this item."],
@@ -57,16 +58,16 @@ my ($title, @help) = @{{
 if ($title && @help)
 {
 	print	$babs->template_expand("quick_header", {title => "Help"}),
-		$babs->of->header($title);
+		$of->header($title);
 
-	print $babs->of->p($_) foreach @help;
+	print $of->p($_) foreach @help;
 
-	print	$babs->of_closewin("Close Window"),
+	print	$of_closewin("Close Window"),
 		$babs->template_expand("quick_footer");
 } else {
 	print	$babs->template_expand("quick_header", {title => "Error"}),
-		$babs->of->header("Error"),
-		$babs->of->p("No help information could be found for the requested item"),
+		$of->header("Error"),
+		$of->p("No help information could be found for the requested item"),
 		$babs->template_expand("quick_footer");
 }
 
