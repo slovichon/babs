@@ -85,52 +85,6 @@ sub build_path
 	}
 }
 
-sub encode_http
-{
-	my ($this, $data) = @_;
-	$data =~ s/[^a-zA-Z0-9]/"%" . unpack("H", $1)/ge;
-	return $data;
-}
-
-sub decode_http
-{
-	my ($this, $data) = @_;
-	$data =~ s/%(\d\d)/pack("H", $1)/g;
-	return $data;
-}
-
-sub encode_html
-{
-	my ($this, $data) = @_;
-	my %tbl =
-	(
-		'"' => "quot",
-		"'" => "apos",
-		'<' => "lt",
-		'>' => "gt",
-		'&' => "amp",
-	);
-	my $c = qr![^a-zA-Z0-9_=()\[\]{}!@#\$%^\*:;.,\/\\\|+-]!;
-	$data =~ s/$c/"$" . (exists $tbl{$&} ? $tbl{$&} : "#" . ord($&)) . ";"/ge;
-	return $data;
-}
-
-sub decode_html
-{
-	my ($this, $data) = $_;
-	my %tbl =
-	(
-		"quot"	=> '"',
-		"apos"	=> "'",
-		"lt"	=> '<',
-		"gt"	=> '>',
-		"amp"	=> '&',
-	);
-	$data =~ s/$#(\d+);/chr($1)/ge;
-	$data =~ s/&(.*);/exists $tbl{$1} ? $tbl{$1} : $&/ge;
-	return $data;
-}
-
 sub in_array
 {
 	my ($needle, $hay) = @_;
@@ -219,38 +173,60 @@ sub redirect
 	exit(0);
 }
 
-# This sub is used by str_parse() to clean up HTML
-# attributes. It has no other immediate usefulness
-sub _str_attr_clean
+sub arrayeq
 {
-	my ($this, $name, $val) = @_;
+	my ($a1, $a2) = @_;
+	my $i;
 
-	# Attributes will have been matched by their delimiters ['"]
-	# Note that this should be one of the other; not both
-	$val =~ s/^&quot;(.*)&quot;$|/$1/; #xor
-	$val =~ s/^'(.*)'$/$1/g;
-
-	# Attributes should have been subjected to htmlEntities()
-#	$val = $this->decode_html($val);
-
-	# Strip dangerous "expression()"s in CSS
-	my @mat;
-	if ($name eq "style" && $this->{story_strip_expr} &&
-		(@mat = m!([a-zA-Z0-9-]+)\s*:\s*expression\(!ig))
+	for ($i = 0; $i < @$a1; $i++)
 	{
-		$val = $this->str_remove_css($val, \@mat);
+		return FALSE unless $a1->[$i] eq $a2->[$i]
 	}
 
-	return $val;
+	return @$a2 == $i;
 }
 
-sub str_remove_css
+# Reads from post data. Also checks if the HTTP_REFERER
+# is valid (i.e., originating from the host that created
+# the previous page) if set to do so.
+sub post
 {
+	my ($this, $var) = @_;
+	return undef if $this->{check_http_referer} && !$this->valid_referer;
+	return undef unless $this->{isapi}->request_method eq "POST";
+	return $this->{isapi}->param($var);
 }
 
-sub str_parse
+sub request
 {
+	my ($this, $var) = @_;
+	return $this->{isapi}->param($var);
 }
 
+sub valid_referer
+{
+	my ($this) = @_;
+	# Cache
+	return $this->{valid_referer} if exists $this->{valid_referer};
+	return $this->{valid_referer} = $this->{isapi}->referer =~ /^\Q$this->{site_uri}/;
+}
+
+sub help_id
+{
+	my ($this, $id) = @_;
+	my %map = 
+	(
+		"overview break"	=> 101,
+		"auto-urls"		=> 102,
+		"allowed html"		=> 103,
+		"html attributes"	=> 104,
+		"clear rss"		=> 105,
+		"clear cache"		=> 106,
+		"password confirm"	=> 107,
+	);
+
+	return 0 unless exists $map{$id};
+	return $map{$id};
+}
 
 return 1;
