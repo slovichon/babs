@@ -1,4 +1,4 @@
-# Babs.pm - news management system
+# Babs core routines
 # $Id$
 package Babs;
 
@@ -115,11 +115,6 @@ sub throw
 
 	$this->{wasp}->throw($msg);
 }
-
-# Access to some properties
-sub of		{ $_[0]->{of} }
-sub isapi	{ $_[0]->{isapi} }
-sub dbh		{ $_[0]->{dbh} }
 
 require "comments.inc";
 require "crypt.inc";
