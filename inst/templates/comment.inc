@@ -8,13 +8,13 @@ if (ref $comment eq "HASH") {
 	our ($date, $author_url, $edit_url, $delete_url, $subject,
 	     $comment_url);
 
-	my $author = $babs->{dbh}->query("
+	my $author = $babs->dbh_selectcol("
 			SELECT
 				username
 			FROM
 				babs_users
 			WHERE
-				user_id = " . $comment->{author_id}, DBH::DB_COL);
+				user_id = ?", $comment->{author_id});
 	$date = Timestamp->new($comment->{create_date})->format($babs->{time_format});
 	$author_url	= $babs->build_url("profile",
 				user_id    => $comment->{author_id});
