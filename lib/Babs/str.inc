@@ -200,7 +200,7 @@ sub _str_check_proto {
 use constant STR_NONE	=> (1<<0);
 use constant STR_HTML	=> (1<<1);
 use constant STR_URL	=> (1<<2);
-use constant STR_ALL	=> STR_HTML | STR_URL;
+use constant STR_ALL	=> STR_HTML() | STR_URL();
 
 =item C<< $safe = $babs->str_parse($str, $flags); >>
 
@@ -269,11 +269,11 @@ be converted to common HTML C<br> tags.
 sub str_parse {
 	my ($this, $str, $flags) = @_;
 	
-	$flags = STR_ALL unless defined $flags;
+	$flags = STR_ALL() unless defined $flags;
 	
 	$str = $this->encode_html($str);
 
-	if ($flags & STR_HTML) {
+	if ($flags & STR_HTML()) {
 		# We should probably make an option including leaving
 		# alone, blocking, and truncating.
 		
@@ -346,7 +346,7 @@ sub str_parse {
 		} until ($new eq $str);
 	}
 
-	if ($flags & STR_URL) {
+	if ($flags & STR_URL()) {
 		if ($this->{story_auto_urls}) {
 			# If admin specifies which TLDs to check, enforce them.
 			# Else any "supposed" TLD will automate.
