@@ -114,56 +114,50 @@ sub comment_add {
 	$comment->{parent_comment_id} = 0 unless $comment->{parent_comment_id};
 
 	# Generate unique comment id
-	$comment->{comment_id} = 1 + $dbh->query("	SELECT
-								comment_id
-							FROM
-								babs_comments
-							WHERE
-								story_id = $comment->{story_id}
-							ORDER BY
-								comment_id DESC
-							LIMIT 1 ", DB_NULL);
+	$comment->{comment_id} = 1 + $this->dbh_selectcol("
+					SELECT
+						comment_id
+					FROM
+						babs_comments
+					WHERE
+						story_id = $comment->{story_id}
+					ORDER BY
+						comment_id DESC
+					LIMIT 1 ");
 
 	# Build SQL
 	my $sql_fields = "";
 	my $sql_values = "";
+	my @params;
 
 	my ($field_id, $field);
 	while (($field_id, $field) = each( %{ $this->{comment_fields} } )) {
 		$comment->{$field_id} = $dbh->prepare_str($this->str_parse(
 						$comment->{$field_id}, $field->{parse}), SQL_REG);
 
-		$sql_fields .= " ,ud_$field_id ";
-		$sql_values .= " ,'{$comment->{$field_id}}' ";
+		$sql_fields .= " ud_$field_id, ";
+		$sql_values .= " ?, ";
+		push @params, $comment->{$field_id};
 	}
 
-	$dbh->query("	INSERT INTO
-				babs_comments
-			(
-				story_id,
-				comment_id,
-				author_id,
-				subject,
-				comment,
-				create_date,
-				parent_comment_id
-				$sql_fields
-			) VALUES (
-				$comment->{story_id},
-				$comment->{comment_id},
-				$comment->{author_id},
-				'$comment->{subject}',
-				'$comment->{comment}',
-				NOW(),
-				$comment->{parent_comment_id},
-			)", DB_NULL);
+	$dbh->do("
+		INSERT INTO babs_comments (
+			$sql_fields
+			story_id, comment_id, author_id, subject,
+			comment, create_date, parent_comment_id
+		) VALUES (
+			$sql_values
+			?, ?, ?, ?,
+			?, NOW(), ?,
+		)", {},
+			@params,
+			@comment->{qw( story_id comment_id author_id
+					subject comment parent_comment_id )});
 
-	$dbh->query("	UPDATE
-				babs_stories
-			SET
-				num_comments = num_comments + 1
-			WHERE
-				story_id = $comment->{story_id}", DB_NULL);
+	$dbh->do("
+		UPDATE babs_stories
+		SET num_comments = num_comments + 1
+		WHERE story_id = ? ", {}, $comment->{story_id});
 
 	$this->event_fire(EVT_COMMENT_ADD(), $comment);
 
@@ -231,26 +225,27 @@ sub comment_update {
 				$comment->{subject}, STR_NONE()), SQL_REG);
 	$comment->{comment} = $dbh->prepare_str($this->str_parse($comment->{comment}), SQL_REG);
 
-	my $sql = "	UPDATE
-				babs_comments
-			SET
-				mod_date	= NOW(), ";
+	my $udf_fields = "";
+	my @params = ();
 
 	my ($field_id, $field);
 	while (($field_id, $field) = each %{ $this->{comment_fields} }) {
 		$comment->{$field_id} = $dbh->prepare_str($this->str_parse(
 						$comment->{$field_id}, $field->{parse}), SQL_REG);
 
-		$sql .= "	ud_$field_id	= '$comment->{$field_id}', ";
+		$udf_fields .= " ud_$field_id = ?, ";
+		push @params, $comment->{$field_id};
 	}
 
-	$sql .= "
-				subject		= '$comment->{subject}',
-				comment		= '$comment->{comment}'
-			WHERE
-				story_id	= $comment->{story_id}
-			AND	comment_id	= $comment->{comment_id} ";
-	$dbh->query($sql, DB_NULL);
+	$dbh->query("
+		UPDATE babs_comments
+		SET 	$udf_fields
+			mod_date	= NOW(),
+			subject		= ?,
+			comment		= ?
+		WHERE 	story_id	= ?
+		AND	comment_id	= ? ", {},
+			@params, @comment->{qw( subject comment story_id comment_id )});
 
 	$this->event_fire(EVT_COMMENT_UPDATE(), $comment);
 
