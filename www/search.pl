@@ -15,5 +15,3 @@ if ($query) {
 } else {
 	# Show search form
 }
-
-exit 0;

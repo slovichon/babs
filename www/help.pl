@@ -70,5 +70,3 @@ if ($title && @help)
 		$of->p("No help information could be found for the requested item"),
 		$babs->template_expand("quick_footer");
 }
-
-exit 0;

@@ -7,4 +7,3 @@ use warnings;
 
 my $babs = Babs->new(shift);
 
-exit 0;

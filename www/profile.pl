@@ -23,5 +23,3 @@ if ($babs->user_exists($user_id))
 		$of->p("The requested user could not be found."),
 		$babs->footer();
 }
-
-exit 0;

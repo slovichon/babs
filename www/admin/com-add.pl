@@ -6,8 +6,17 @@ use strict;
 use warnings;
 
 my $babs = Babs->new(shift);
-my $thraxx = $babs->{thraxx};
+$babs->require_login(Babs::PERM_STORY_ADD);
 
+my $oof = $babs->{oof};
 
+if ($babs->req("submitted")) {
+	# "Add Story" form submitted; add story
+}
 
-exit 0;
+if () {
+	# Simple request; display "Add Story" form
+	print	$babs->expand_template(),
+		$oof->header("Adding Story"),
+		$babs->expand_template();
+}

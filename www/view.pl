@@ -20,4 +20,3 @@ if (my $story = $babs->template_expand($template, {story_id => $story_id})) {
 	$babs->error_page("The requested story could not be found.");
 }
 
-exit 0;
