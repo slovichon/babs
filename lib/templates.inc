@@ -3,7 +3,7 @@
 
 sub template_expand
 {
-	my ($__this, $__type, %__args) = @_;
+	my ($__this, $__type, $__args) = @_;
 
 	my $__file  = $__this->{templates_dir} . "/$__type";
 
@@ -15,18 +15,21 @@ sub template_expand
 	no strict 'vars';
 
 	# Import args to natural name
-	my ($__k, $__v);
-	while (($__k, $__v) = each %__args)
+	if (ref $__args eq "HASH")
 	{
-		if ($__k =~ /^[a-zA-Z]+$/)
+		my ($__k, $__v);
+		while (($__k, $__v) = each %$__args)
 		{
-			our $$__k = $__v;
+			if ($__k =~ /^[a-zA-Z]+$/)
+			{
+				our $$__k = $__v;
+			}
 		}
 	}
 
 	eval {
 		require "$__file.inc";
-	}
+	};
 
 	# Check for errors
 	return "" if $@;
@@ -34,26 +37,27 @@ sub template_expand
 	my $__template = $__this->slurp_file("$__file.t");
 
 	# Substitute variables
-	$__template =~	s<
+	$__template =~	s~
 				({?)			# Optional { ... } delimiter
 				(
 					[\$@%]		# Scalar, array, hash
 					[a-zA-Z_]	# First char
 					[a-zA-Z0-9_]+	# Subsequent chars
-					(->)?		# Optional dereference
+					(?:->)?		# Optional dereference
 					(?:
 						(?: \[ .*? \] )
 						|
-						(?: { .* ? } )
+						(?: { .*? } )
 					)*		# Any amount of subscripts
 				)
 				\\1
-			><$1>gxee;
+			~$1~gxee;
 
 	package Babs;
 
 	# Clear Babs::NullTemplate - if for no other reasons
 	# than cleanliness and future conflicts
+	my ($__k);
 	while ( ($__k) = each %Babs::NullTemplate::)
 	{
 		delete $Babs::NullTemplate::{$__k};
@@ -66,6 +70,18 @@ sub template_exists
 {
 	my ($this, $type) = @_;
 	return -f $this->{template_dir} . "/$type.inc";
+}
+
+sub header
+{
+	my ($this, $title) = @_;
+	return $this->template_expand("header", {title => $title});
+}
+
+sub footer
+{
+	my ($this) = @_;
+	return $this->template_expand("footer");
 }
 
 return 1;
