@@ -38,7 +38,7 @@ CREATE TABLE babs_stories
 	story_id	@@STORIES@@INT			NOT NULL	AUTO_INCREMENT,
 	author_id	@@USERS@@INT			NOT NULL,
 	headline	VARCHAR(@@HEADLINE_LEN@@)	NOT NULL,
-	overview	VARCHAR(@@OVERVIEW_LEN@@)	NOT NULL,
+/*	overview	VARCHAR(@@OVERVIEW_LEN@@)	NOT NULL, */
 	story		@@STORY_SIZE@@TEXT		NOT NULL,
 	create_date	TIMESTAMP,
 	mod_date	TIMESTAMP,
