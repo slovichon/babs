@@ -22,9 +22,11 @@ sub story_add
 
 	return [$err, @uerr] if $err != E_NONE || @uerr;
 
+	# Prepare data
 	$story->{headline}	= $dbh->prepare_str($this->str_parse($story->{headline}, STR_NONE), SQL_REG);
 	$story->{story}		= $dbh->prepare_str($this->str_parse($story->{story}), SQL_REG);
 
+	# Build SQL
 	my $sql_fields = "";
 	my $sql_values = "";
 
@@ -50,6 +52,16 @@ sub story_add
 			) VALUES (
 				$story->{author_id},
 			)", DB_NULL);
+
+	$story->{is_recent} = TRUE;
+
+	# Calculate story id only if it will be used
+	# (we're just guessing whether it will be used)
+	$story->{story_id} = $dbh->last_insert_id if $this->event_has(EVT_STORY_ADD);
+
+	$this->event_fire(EVT_STORY_ADD, $story);
+
+	return [E_NONE];
 }
 
 sub story_update
@@ -68,9 +80,11 @@ sub story_update
 
 	return [$err, @uerr] if $err != E_NONE || @uerr;
 
+	# Prepare data
 	$story->{headline}	= $dbh->prepare_str($this->str_parse($story->{headline}, STR_NONE), SQL_REG);
 	$story->{story}		= $dbh->prepare_str($this->str_parse($story->{story}), SQL_REG);
 
+	# Build SQL
 	my $sql = "	UPDATE
 				babs_stories
 			SET
@@ -93,13 +107,9 @@ sub story_update
 	
 	$dbh->query($sql, DB_NULL);
 
-	# Calculate story id only if it will be used
-	# (we're just guessing whether it will be used)
-	$story->{story_id} = $dbh->last_insert_id if $this->event_has(EVT_STORY_ADD);
+	$this->event_fire(EVT_STORY_UPDATE, $story);
 
-	$this->event_fire(EVT_STORY_ADD, $story);
-
-	return [E_NONE, ()];
+	return [E_NONE];
 }
 
 sub story_remove
@@ -107,27 +117,65 @@ sub story_remove
 	my ($this, $story_id) = @_;
 	return FALSE unless $story_id && $story_id =~ /^\d+$/;
 	my $dbh = $this->{dbh};
-	my $recent = $this->story_is_recent($story_id);
-	my $ret = $dbh->query("	DELETE FROM
-					babs_stories
-				WHERE
-					story_id = $story_id", DB_NULL);
+
+	if ($this->event_has(EVT_STORY_REMOVE))
+	{
+		# Only gather the story if it will be used
+		my $story = $this->story_get($story_id);
+		$this->event_fire(EVT_STORY_REMOVE, $story);
+	}
+	
+	my $rows = $dbh->query("	DELETE FROM
+						babs_stories
+					WHERE
+						story_id = $story_id", DB_NULL);
 	$dbh->query("	DELETE FROM
 				babs_comments
 			WHERE
 				story_id = $story_id", DB_NULL);
-	$this->event_fire(EVT_STORY_REMOVE, $story_id);
+	return $rows ? E_NONE : E_STORY_EXIST;
 }
 
-sub story_is_recent
+# This sets the field `is_recent' in a story to the
+# corresponding value so it can easily be reused
+# without worry of other components continually requesting
+# recentness.
+sub story_set_recent
 {
-	my ($this, $story_id) = @_;
+	my ($this, $story, $type) = @_;
+	$story->{is_recent} =  FALSE;
+	return unless $story->{story_id} && $story->{story_id} =~ /^\d+$/;
+
+	# Check type
+	$type = "default_result_limit" unless defined $type;
+	return FALSE unless grep {$type eq $_} qw(default_result_limit max_result_limit);
+
+	# Ask for the most recent stories
+	$this->{dbh}->query("	SELECT
+					story_id	
+				FROM
+					babs_stories
+				ORDER BY
+					create_date DESC
+				LIMIT
+					$this->{$type}", DB_COL);
+	my $id;
+	while (($id) = $this->{dbh}->fetch_row)
+	{
+		if ($id == $story->{story_id})
+		{
+			# Requested story is a recent one
+			$story->{is_recent} = TRUE;
+			return;
+		}
+	}
+	return;
 }
 
 sub story_get
 {
 	my ($this, $story_id) = @_;
-	return undef unless defined $story_id && $story_id =~ /^\d+$/;
+	return () unless defined $story_id && $story_id =~ /^\d+$/;
 	my %story = $this->{dbh}->query("	SELECT
 							*
 						FROM
@@ -164,7 +212,7 @@ sub story_get_comments
 				AND	parent_comment_id	= 0", DB_ROWS);
 	my $id;
 	push @ids, $id while ($id) = $this->{dbh}->fetch_row();
-	return @ids;
+	return \@ids;
 }
 
 return 1;
