@@ -198,10 +198,11 @@ is non-existant or invalid.
 
 =back
 
-The second value returned is similar to that of L<Babs::comment_add()>.
+The second value returned is similar to that of
+L<Babs::comment_add()>.
 
-On success, this method therefore returns an array of C<E_NONE> and
-a reference to an empty array.
+On success, this method therefore returns an array of
+C<E_NONE> and a reference to an empty array.
 
 This method fires the C<EVT_COMMENT_UPDATE> event on success.
 The event argument list contains a single hash reference to all
