@@ -1,8 +1,17 @@
 # Babs comment routines
 # $Id$
 
-use DBH qw(:all);
+=head2 Comment Routines
+
+These routines house a collection of functionality pertaining
+to comment-handling.
+
+=over
+
+=cut
+
 use strict;
+use warnings;
 
 sub _comment_init {
 	my ($this) = @_;
@@ -15,6 +24,66 @@ sub _comment_init {
 	$g->add("E_COMMENT_EXIST");	# Non-existant comment
 	$g->add("E_COMMENT_MAX");	# Max comments reached
 }
+
+=item $babs->comment_add($comment);
+
+This routine adds the argued comment to the database.
+The return value is an array containing two values.
+The first value is a bit vector which can contain any of the
+following system-defined error constants.
+
+=over
+
+=item C<E_COMMENT_COMMENT>
+
+The argued comment field is non-existant or invalid.
+
+=item C<E_COMMENT_SUBJECT>
+
+The argued subject field is non-existant or invalid.
+
+XXX: this field should be able to be controlled by a preference
+which defaults the parent comment's title or die on invalid argument.
+
+=item C<E_COMMENT_STORY>
+
+The argued associated story is invalid or non-existant.
+
+=item C<E_COMMENT_PRIV>
+
+The argued author does not have privileges to post this comment, either
+temporarily or permanently.
+
+=item C<E_COMMENT_EXIST>
+
+The argued associated parent comment to which this comment is to
+be posted is non-existant or invalid.
+
+=item C<E_COMMENT_MAX>
+
+The maximum number of comments has been exceeded.
+
+XXX: there should be a total bound and maximum depth that a
+particular hierarchial comment thread can reach.
+
+=back
+
+The second value is itself an array reference containing
+user-defined field identifiers for which the argued fields
+have not met the required criteria.
+
+On success, this method therefore returns an array of C<E_NONE>
+and a reference to an empty array (denoting no offending
+user-defined field values).
+
+This method adjusts the C<num_comments> field (which reflects
+the number of comments) of the associated story.
+
+This method fires the C<EVT_COMMENT_ADD> event on success.
+The event argument list contains a single hash reference to all
+comment fields.
+
+=cut
 
 sub comment_add {
 	my ($this, $comment) = @_;
@@ -34,7 +103,8 @@ sub comment_add {
 						$story->{num_comments} >= $this->{max_comments};
 	$err |= E_USER_EXIST()		unless $this->user_exists($comment->{author_id});
 	$err |= E_COMMENT_EXIST()	if $comment->{parent_comment_id} &&
-						!$this->comment_exists($comment->{parent_comment_id});
+						!$this->comment_exists($comment->{story_id},
+							$comment->{parent_comment_id});
 
 	my $uerr = $this->udf_validate(FLD_COMMENT(), $comment);
 
@@ -102,6 +172,45 @@ sub comment_add {
 	return (E_NONE(), []);
 }
 
+=item $babs->comment_update($comment);
+
+This routine updates the argued comment to the database.
+The return value is an array containing two values.
+The first value is a bit vector which can contain any of
+the following system-defined error constants.
+
+=over
+
+=item C<E_COMMENT_COMMENT>
+
+The argued comment field is non-existant or invalid.
+
+=item C<E_COMMENT_SUBJECT>
+
+The argued subject field is non-existant or invalid.
+
+=item C<E_COMMENT_STORY>
+
+The argued associated story is non-existant or invalid.
+
+=item C<E_COMMENT_EXIST>
+
+The argued comment to which this update is supposed to happen
+is non-existant or invalid.
+
+=back
+
+The second value returned is similar to that of C<Babs::comment_add()>.
+
+On success, this method therefore returns an array of C<E_NONE> and
+a reference to an empty array.
+
+This method fires the C<EVT_COMMENT_UPDATE> event on success.
+The event argument list contains a single hash reference to all
+comment fields.
+
+=cut
+
 sub comment_update {
 	my ($this, $comment) = @_;
 	my $dbh = $this->{dbh};
@@ -111,7 +220,8 @@ sub comment_update {
 	$err |= E_COMMENT_COMMENT()	unless $comment->{comment};
 	$err |= E_COMMENT_SUBJECT()	unless $comment->{subject};
 	$err |= E_COMMENT_STORY()	unless $this->story_exists($comment->{story_id});
-	$err |= E_COMMENT_EXIST()	unless $this->comment_exists($comment->{comment_id});
+	$err |= E_COMMENT_EXIST()	unless $this->comment_exists($comment->{story_id},
+						$comment->{comment_id});
 
 	my $uerr = $this->udf_validate(FLD_COMMENT(), $comment);
 
@@ -128,8 +238,7 @@ sub comment_update {
 				mod_date	= NOW(), ";
 
 	my ($field_id, $field);
-	while (($field_id, $field) = each %{ $this->{comment_fields} })
-	{
+	while (($field_id, $field) = each %{ $this->{comment_fields} }) {
 		$comment->{$field_id} = $dbh->prepare_str($this->str_parse(
 						$comment->{$field_id}, $field->{parse}), SQL_REG);
 
@@ -143,16 +252,30 @@ sub comment_update {
 				story_id	= $comment->{story_id}
 			AND	comment_id	= $comment->{comment_id} ";
 	$dbh->query($sql, DB_NULL);
+
 	$this->event_fire(EVT_COMMENT_UPDATE(), $comment);
+
 	return (E_NONE(), []);
 }
+
+=item $babs->comment_remove($story_id, $comment_id);
+
+This method removes the argued comment and all of its children from
+the database. A list of the comment identifiers, if any, is returned.
+
+This method adjusts the C<num_comments> field of the associated
+story.
+
+This method fires the C<EVT_COMMENT_REMOVE> event.
+
+=cut
 
 sub comment_remove {
 	my ($this, $story_id, $comment_id) = @_;
 	my $dbh = $this->{dbh};
 
-	return FALSE() unless $this->story_exists($story_id);
-	return FALSE() unless $this->comment_exists($comment_id);
+	return () unless $this->story_exists($story_id);
+	return () unless $this->comment_exists($story_id, $comment_id);
 
 	# We must remove all "child" comments of the comment
 	# in question. To do this, we compile a list and find
@@ -210,10 +333,20 @@ sub comment_remove {
 	return @targets;
 }
 
+=item $babs->comment_get($story_id, $comment_id);
+
+This method gathers a comment. The value returned is a hash reference
+containing as key/value pairs the various comment fields, including
+user-defined fields as regular key/value pairs, just as any other
+field. If the requested story could not be gathered, an C<undef>
+value is returned instead.
+
+=cut
+
 sub comment_get
 {
 	my ($this, $story_id, $comment_id) = @_;
-	return undef unless $this->comment_exists($comment_id);
+	return undef unless $this->comment_exists($story_id, $comment_id);
 	my %comment = $this->{dbh}->query("	SELECT
 							*
 						FROM
@@ -233,6 +366,30 @@ sub comment_get
 	return \%comment;
 }
 
+=item $babs->comment_get_ancesters($needle, $hay)
+
+This method returns an array reference containing comment identifiers
+for every ancestor of the argued comment.
+
+Arguments:
+
+=over
+
+=item $needle
+
+This argument should specify the comment identifier for which ancestors
+will be searched.
+
+=item $hay
+
+This argument should be a hash reference containing comment identifiers
+as keys and array references of their lists of children directly
+underneath each as values.
+
+=back
+
+=cut
+
 sub comment_get_ancestors {
 	my ($this, $needle, $hay) = @_;
 	my @ancestors = ($needle);
@@ -242,11 +399,11 @@ sub comment_get_ancestors {
 STARTOVER:
 	while ($resume) {
 		$resume = FALSE();
-		while (($parent, $children) = each(%$hay)) {
+		while (($parent, $children) = each %$hay) {
 			foreach $child (@$children) {
 				if ($child == $needle) {
 					push @ancestors, $parent;
-					# Find parent's parent
+					# Find grandparent
 					$needle = $parent;
 					$resume = TRUE();
 					next STARTOVER;
@@ -258,15 +415,28 @@ STARTOVER:
 	return \@ancestors;
 }
 
+=item $babs->comment_exists($story_id, $comment_id);
+
+This method determines whether the argued comment identifier
+refers to an existant comment.
+
+=cut
+
 sub comment_exists {
-	my ($this, $comment_id) = @_;
-	return FALSE() unless $comment_id && $comment_id =~ /^\d+$/;
+	my ($this, $story_id, $comment_id) = @_;
+	return FALSE() unless $story_id   && $story_id   =~ /^\d+$/ &&
+			      $comment_id && $comment_id =~ /^\d+$/;
 	return $this->{dbh}->query("	SELECT
 						comment_id
 					FROM
 						babs_comments
 					WHERE
-						comment_id = $comment_id", DB_COL);
+						story_id   = $story_id
+					AND	comment_id = $comment_id", DB_COL);
 }
+
+=back
+
+=cut
 
 return TRUE();
