@@ -1,6 +1,7 @@
 # Babs comment routines
 # $Id$
 
+use DBH qw(:all);
 use strict;
 
 sub _comment_init
