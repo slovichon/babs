@@ -28,8 +28,9 @@ our $VERSION = 0.1;
 sub create
 {
 	return __PACKAGE__->new(
-		wasp	=> WASP->new(),
-		isapi	=> $ENV{MOD_PERL} ? Apache::Request->new(shift) : CGI->new(),
+		wasp		=> WASP->new(),
+		isapi		=> $ENV{MOD_PERL} ? Apache::Request->new(shift) : CGI->new(),
+		gen_class	=> 0,
 	);
 }
 
@@ -86,8 +87,19 @@ sub new
 sub throw
 {
 	my ($this) = shift;
-	my $msg = join '', @_;
-	$this->{wasp}->throw("Babs error: $msg");
+	my $msg = "Babs Error: " . join '', @_;
+
+	if ($this->{mail_errors})
+	{
+		$this->_mail(to=>$this->{admin_email}, from=>$this->{admin_email},
+				subject=>"$this->{site_name} Babs Error Report", body=>$msg);
+	}
+
+	# Try to display prettily
+	# $this->template_get();
+	# $this->template_get();
+	
+	$this->{wasp}->throw($msg);
 }
 
 require "comments.inc";
