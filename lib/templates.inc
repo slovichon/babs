@@ -11,9 +11,9 @@ sub template_expand
 	delete $INC{"$__file.inc"} if exists $INC{"$__file.inc"};
 
 	package Babs::NullTemplate;
-	
+
 	no strict 'vars';
-	
+
 	# Import args to natural name
 	my ($__k, $__v);
 	while (($__k, $__v) = each %__args)
@@ -23,7 +23,7 @@ sub template_expand
 			our $$__k = $__v;
 		}
 	}
-	
+
 	eval {
 		require "$__file.inc";
 	}
@@ -52,10 +52,11 @@ sub template_expand
 
 	package Babs;
 
-	# Clear Babs::NullTemplate
+	# Clear Babs::NullTemplate - if for no other reasons
+	# than cleanliness and future conflicts
 	while ( ($__k) = each %Babs::NullTemplate::)
 	{
-		delete $Babs::NullTemplate::{$k};
+		delete $Babs::NullTemplate::{$__k};
 	}
 
 	return $__template;
@@ -63,6 +64,8 @@ sub template_expand
 
 sub template_exists
 {
+	my ($this, $type) = @_;
+	return -f $this->{template_dir} . "/$type.inc";
 }
 
 return 1;
