@@ -1,6 +1,7 @@
 # Babs user routines
 # $Id$
 
+use DBH qw(:all);
 use strict;
 
 # User levels
@@ -136,7 +137,7 @@ Notes:
 
 	$dbh->query($sql, DB_NULL);
 
-	return (E_NONE, []);
+	return (E_NONE(), []);
 }
 
 sub user_get_id
