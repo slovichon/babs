@@ -3,6 +3,7 @@
 
 use XML::DOM;
 use strict;
+use warnings;
 
 use constant XML_STORY_RECENT	=> 1;
 use constant XML_STORY_ARCHIVES	=> 2;

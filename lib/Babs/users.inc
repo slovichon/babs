@@ -1,8 +1,8 @@
 # Babs user routines
 # $Id$
 
-use DBH qw(:all);
 use strict;
+use warnings;
 
 # User levels
 use constant USER_LVL_COMMENTER	=> 1;
