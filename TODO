@@ -8,3 +8,8 @@ default template add
 	est. reading time (size/readrate=num of min)
 add random field in story post to prevent batch posting?
 in str_parse(), replace the while loop in html attr parsing with m//cg
+
+remove the users table, one already exists in thraxx (that is what thraxx is
+	for)
+	- make udf more generic: comments.inc and stories.inc (and users.inc
+	  in thraxx) will be removed
