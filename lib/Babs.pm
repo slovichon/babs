@@ -19,11 +19,11 @@ Babs - Babs News System API
 
  # Comment-related methods
  $babs->comment_add($comment);
- $babs->comment_update();
- $babs->comment_remove();
- $babs->comment_get();
- $babs->comment_get_ancestors($comment_id);
- $babs->comment_exists($comment_id);
+ $babs->comment_update($comment);
+ $babs->comment_remove($story_id, $comment_id);
+ $babs->comment_get($story_id, $comment_id);
+ $babs->comment_get_ancestors($needle, $hay);
+ $babs->comment_exists($story_id, comment_id);
 
  # Cryptography-related methods
  $babs->crypt;
