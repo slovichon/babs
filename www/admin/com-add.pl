@@ -1,6 +1,7 @@
 #!/usr/bin/perl -W
 # $Id$
 
+use WASP qw(:std);
 use Babs;
 use strict;
 use warnings;
@@ -117,3 +118,5 @@ if ($printform) {
 		$oof->form_end(),
 		$babs->footer();
 }
+
+EXIT_SUCCESS;

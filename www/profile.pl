@@ -1,6 +1,7 @@
 #!/usr/bin/perl -W
 # $Id$
 
+use WASP qw(:std);
 use Babs;
 use strict;
 use warnings;
@@ -10,7 +11,7 @@ my $oof = $babs->{oof};
 
 my $user_id = $babs->req("user_id") || 0;
 
-if ($babs->user_exists($user_id))
+if ($user_id && $babs->user_exists($user_id))
 {
 	my $user = $babs->user_get($user_id);
 	print	$babs->header("User Profile"),
@@ -24,3 +25,5 @@ if ($babs->user_exists($user_id))
 		$oof->p("The requested user could not be found."),
 		$babs->footer();
 }
+
+EXIT_SUCCESS;

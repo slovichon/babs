@@ -1,5 +1,7 @@
 #!/usr/bin/perl -W
+# $Id$
 
+use WASP qw(:std);
 use Babs;
 use strict;
 use warnings;
@@ -63,7 +65,7 @@ if ($title && @help)
 
 	print	$oof->p($_) foreach @help;
 
-	print	$oof_closewin("Close Window"),
+	print	$babs->oof_closewin("Close Window"),
 		$babs->template_expand("quick_footer");
 } else {
 	print	$babs->template_expand("quick_header", {title => "Error"}),
@@ -71,3 +73,5 @@ if ($title && @help)
 		$oof->p("No help information could be found for the requested item"),
 		$babs->template_expand("quick_footer");
 }
+
+EXIT_SUCCESS;

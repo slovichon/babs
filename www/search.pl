@@ -16,6 +16,7 @@
 # a good chance the user will peruse a few results at least.  Saving
 # them is at least better than requesting them on each page display.
 
+use WASP qw(:std);
 use Babs;
 use strict;
 use warnings;

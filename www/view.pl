@@ -1,6 +1,7 @@
 #!/usr/bin/perl -W
 # $Id$
 
+use WASP qw(:std);
 use Babs;
 use strict;
 use warnings;
@@ -20,3 +21,4 @@ if (my $story = $babs->template_expand($template, {story_id => $story_id})) {
 	$babs->error_page("The requested story could not be found.");
 }
 
+EXIT_SUCCESS;
