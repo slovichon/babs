@@ -1,10 +1,8 @@
-# Babs comment routines
 # $Id$
 
 =head2 Comment Routines
 
-These routines house a collection of functionality pertaining
-to comment-handling.
+This sub-module provides a framework for handling story comments.
 
 =over
 
@@ -25,7 +23,7 @@ sub _comment_init {
 	$g->add("E_COMMENT_MAX");	# Max comments reached
 }
 
-=item $babs->comment_add($comment);
+=item C<< ($err, $uerr) = $babs->comment_add($comment); >>
 
 This routine adds the argued comment to the database.
 The return value is an array containing two values.
@@ -172,7 +170,7 @@ sub comment_add {
 	return (E_NONE(), []);
 }
 
-=item $babs->comment_update($comment);
+=item C<< ($err, $uerr) = $babs->comment_update($comment); >>
 
 This routine updates the argued comment to the database.
 The return value is an array containing two values.
@@ -200,7 +198,7 @@ is non-existant or invalid.
 
 =back
 
-The second value returned is similar to that of C<Babs::comment_add()>.
+The second value returned is similar to that of L<Babs::comment_add()>.
 
 On success, this method therefore returns an array of C<E_NONE> and
 a reference to an empty array.
@@ -258,10 +256,11 @@ sub comment_update {
 	return (E_NONE(), []);
 }
 
-=item $babs->comment_remove($story_id, $comment_id);
+=item C<< $ids = $babs->comment_remove($story_id, $comment_id); >>
 
 This method removes the argued comment and all of its children from
-the database. A list of the comment identifiers, if any, is returned.
+the database.  A reference to an array of the comment identifiers, if any,
+is returned.
 
 This method adjusts the C<num_comments> field of the associated
 story.
@@ -274,26 +273,27 @@ sub comment_remove {
 	my ($this, $story_id, $comment_id) = @_;
 	my $dbh = $this->{dbh};
 
-	return () unless $this->story_exists($story_id);
-	return () unless $this->comment_exists($story_id, $comment_id);
+	return [] unless $this->story_exists($story_id);
+	return [] unless $this->comment_exists($story_id, $comment_id);
 
 	# We must remove all "child" comments of the comment
 	# in question. To do this, we compile a list and find
 	# every comment with an "ancestor" of the target and
 	# remove them.
-	$dbh->query("	SELECT
-				comment_id,
-				parent_comment_id
-			FROM
-				babs_comments
-			WHERE
-				story_id = $story_id", DB_ROWS);
+	$dbh->prepare("
+		SELECT
+			comment_id,
+			parent_comment_id
+		FROM
+			babs_comments
+		WHERE
+			story_id = ? ", $story_id);
 
 	my %all = ();
 
 	# Create a list of parent => child comments
 	my ($i_id, $i_parent);
-	while (($i_id, $i_parent) = $dbh->fetch_row) {
+	while (($i_id, $i_parent) = $dbh->fetchrow_array) {
 		if (exists $all{$i_parent}) {
 			push @{ $all{$i_parent} }, $i_id;
 		} else {
@@ -317,23 +317,26 @@ sub comment_remove {
 	}
 
 	# Removal
-	$dbh->query("	DELETE FROM
-				babs_comments
-			WHERE
-				story_id = $story_id
-			AND	comment_id IN (" . join(",", @targets) . ")", DB_NULL);
+	$dbh->do("
+		DELETE FROM
+			babs_comments
+		WHERE
+			story_id = ?
+		AND	comment_id IN (" . join(",", ("?") x @targets) .  ") ",
+		$story_id, @targets);
 
-	$dbh->query("	UPDATE
-				babs_stories
-			SET
-				num_comments = num_comments - " . @targets . "
-			WHERE
-				story_id = $story_id", DB_NULL);
+	$dbh->do("
+		UPDATE
+			babs_stories
+		SET
+			num_comments = num_comments - ?
+		WHERE
+			story_id = ? ", scalar @targets, $story_id);
 
-	return @targets;
+	return \@targets;
 }
 
-=item $babs->comment_get($story_id, $comment_id);
+=item C<< $comment = $babs->comment_get($story_id, $comment_id); >>
 
 This method gathers a comment. The value returned is a hash reference
 containing as key/value pairs the various comment fields, including
@@ -343,17 +346,17 @@ value is returned instead.
 
 =cut
 
-sub comment_get
-{
+sub comment_get {
 	my ($this, $story_id, $comment_id) = @_;
 	return undef unless $this->comment_exists($story_id, $comment_id);
-	my %comment = $this->{dbh}->query("	SELECT
-							*
-						FROM
-							babs_comments
-						WHERE
-							story_id   = $story_id
-						AND	comment_id = $comment_id", DB_ROW);
+	my %comment = $this->dbh_selectcol("
+			SELECT
+				*
+			FROM
+				babs_comments
+			WHERE
+				story_id   = ?
+			AND	comment_id = ? ", $story_id, $comment_id);
 	if (%comment) {
 		my %c = ();
 		my ($k, $v);
@@ -366,7 +369,7 @@ sub comment_get
 	return \%comment;
 }
 
-=item $babs->comment_get_ancesters($needle, $hay)
+=item C<< $ids = $babs->comment_get_ancesters($needle, $hay); >>
 
 This method returns an array reference containing comment identifiers
 for every ancestor of the argued comment.
@@ -415,7 +418,7 @@ STARTOVER:
 	return \@ancestors;
 }
 
-=item $babs->comment_exists($story_id, $comment_id);
+=item C<< $exists = $babs->comment_exists($story_id, $comment_id); >>
 
 This method determines whether the argued comment identifier
 refers to an existant comment.
@@ -426,13 +429,14 @@ sub comment_exists {
 	my ($this, $story_id, $comment_id) = @_;
 	return FALSE() unless $story_id   && $story_id   =~ /^\d+$/ &&
 			      $comment_id && $comment_id =~ /^\d+$/;
-	return $this->{dbh}->query("	SELECT
-						comment_id
-					FROM
-						babs_comments
-					WHERE
-						story_id   = $story_id
-					AND	comment_id = $comment_id", DB_COL);
+	return $this->dbh_selectcol("
+		SELECT
+			comment_id
+		FROM
+			babs_comments
+		WHERE
+			story_id   = ?
+		AND	comment_id = ? ", $story_id, $comment_id);
 }
 
 =back
