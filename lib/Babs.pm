@@ -1,10 +1,11 @@
-package Babs;
+# Babs.pm - content management system
 # $Id$
+package Babs;
 
 use Timestamp;
 use OF;
 use DBH qw(:all);
-use Exporter;
+#use Exporter;
 
 BEGIN {
 	if ($ENV{MOD_PERL})
@@ -17,7 +18,8 @@ BEGIN {
 }
 
 use strict;
-use constant TRUE => 1;
+
+use constant TRUE  => 1;
 use constant FALSE => 0;
 
 # Error constants
@@ -87,7 +89,7 @@ sub new
 sub throw
 {
 	my ($this) = shift;
-	my $msg = "Babs Error: " . join '', @_;
+	my $msg = "Babs error: " . join '', @_;
 
 	if ($this->{mail_errors})
 	{
