@@ -1,71 +1,56 @@
 package Babs;
+# $Id$
 
-$VERSION = "0.1";
-@ISA = qw(Exporter);
-@EXPORT = qw(	BABS_STR_NONE BABS_STR_HTML BABS_STR_URL
-		BABS_STR_ALL
-
-		BABS_PATH_ABS BABS_PATH_REL BABS_PATH_SYS
-
-		BABS_E_NONE);
-
-# WASP libraries
-use WASP;
-use WASP::Timestamp;
-
-# Other stuff
+use Timestamp;
+use OF;
+use DBH qw(:all);
 use Exporter;
 
 use strict;
 use constant TRUE => 1;
 use constant FALSE => 0;
 
-require "babs-config.inc";
+# Error constants
+use constant E_NONE => 0;
+
+our $VERSION = 0.1;
+
+sub new
+{
+	my ($class, %prefs) = @_;
+
+	my $this = bless {
+		skip_init	=> exists $prefs{skip_init} ? $prefs{skip_init} : FALSE,
+		wasp		=> $prefs{wasp},
+		of		=> $prefs{of},
+	}, ref($class) || $class;
+
+	require "babs-config.inc";
+
+	$this->udf_update() unless $this->{skip_init};
+
+	# Propagate construction
+	$this->_xml_init();
+
+	return $this;
+}
+
 require "comments.inc";
 require "crypt.inc";
 require "isr.inc";
 require "sessions.inc";
 require "stories.inc";
 require "templates.inc";
-require "userfields.inc";
+require "udf.inc";
 require "users.inc";
 require "xml.inc";
 
-sub new
+sub DESTROY
 {
-	my ($class,%prefs) = @_;
+	my ($this) = @_;
 
-	my $this = bless {
-			skip_init => exists $prefs{skip_init} ? $prefs{skip_init} : FALSE,
-			}, ref($class) || $class;
-
-
-	$this->userfields_update() unless $this->skip_init;
-
-	return bless \%prefs, ref($class) || $class;
+	# Propagate destruction
+	$this->_xml_cleanup();
 }
-
-# properties
-sub skip_init { my $this = shift; return $this->{skip_init}; }
-sub of
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 return 1;

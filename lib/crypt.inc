@@ -1,32 +1,33 @@
 # crypt.inc
+# $Id$
 
 use constant BABS_RAND_ALNUM => 1;
 use constant BABS_RAND_VIS_NQ => 2;
 push @EXPORT, qw(BABS_RAND_ALNUM BABS_RAND_VIS_NQ);
 
 my %methods = (
-		"3des"		=> 48,
-		aes		=> 32,
-		blowfish 	=> 56,
-		cast5 		=> 16,
-		ciphersaber 	=> 53,
-		des 		=> 8,
-		gost 		=> 32,
-		idea 		=> 16,
-		md5 		=> 32,
-		null		=> 16,
-		rc4		=> ,
-		rc5		=> ,
-		rc6		=> ,
-		rmd160		=> ,
-		rsa		=> ,
-		serpent		=> ,
-		sha1		=> ,
-		solitaire	=> ,
-		tea		=> ,
-		twofish		=> ,
-		vigenere	=> ,
-	);
+	"3des"		=> 48,
+	aes		=> 32,
+	blowfish 	=> 56,
+	cast5 		=> 16,
+	ciphersaber 	=> 53,
+	des 		=> 8,
+	gost 		=> 32,
+	idea 		=> 16,
+	md5 		=> 32,
+	null		=> 16,
+	rc4		=> undef,
+	rc5		=> undef,
+	rc6		=> undef,
+	rmd160		=> undef,
+	rsa		=> undef,
+	serpent		=> undef,
+	sha1		=> undef,
+	solitaire	=> undef,
+	tea		=> undef,
+	twofish		=> undef,
+	vigenere	=> undef,
+);
 
 sub crypt
 {
