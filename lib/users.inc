@@ -7,12 +7,12 @@ use constant USER_LVL_REGULAR	=> 2;
 use constant USER_LVL_ADMIN	=> 3;
 
 # User errors
-use constant E_USER_NAME	=> (1<<10);	# Invalid username
-use constant E_USER_NAME_USE	=> (1<<11);	# Username already in use
-use constant E_USER_PASS	=> (1<<12);	# Invalid password
-use constant E_USER_EMAIL	=> (1<<13);	# Invalid e-mail address
-use constant E_USER_TYPE	=> (1<<14);	# Invalid user type
-use constant E_USER_EXIST	=> (1<<15);	# Non-existant user
+use constant E_USER_NAME	=> 010&&(1<<0); # Invalid username
+use constant E_USER_NAME_USE	=> 010&&(1<<1); # Username already in use
+use constant E_USER_PASS	=> 010&&(1<<2); # Invalid password
+use constant E_USER_EMAIL	=> 010&&(1<<3); # Invalid e-mail address
+use constant E_USER_TYPE	=> 010&&(1<<4); # Invalid user type
+use constant E_USER_EXIST	=> 010&&(1<<5); # Non-existant user
 
 sub user_add
 {
@@ -51,8 +51,8 @@ sub user_add
 	my ($field, $field_id);
 	while (($field_id, $field) = each(%{ $this->{user_fields} }))
 	{
-		$user->{$field_id} = $dbh->prepare_str(
-			$this->str_parse($user->{$field_id}, $field->{parse}), SQL_REG);
+		$user->{$field_id} = $dbh->prepare_str($this->str_parse(
+					$user->{$field_id}, $field->{parse}), SQL_REG);
 
 		$sql_fields .= ", ud_$field_id";
 		$sql_values .= ", '$user->{$field_id}'";
@@ -116,8 +116,8 @@ Notes:
 	my ($field, $field_id);
 	while (($field_id, $field) = each(%{ $this->{user_fields} }))
 	{
-		$user->{$field_id} = $dbh->prepare_str(
-			$this->str_parse($user->{$field_id}, $field->{parse}), SQL_REG);
+		$user->{$field_id} = $dbh->prepare_str($this->str_parse(
+					$user->{$field_id}, $field->{parse}), SQL_REG);
 			
 		$sql .= "	ud_$field_id	= '$user->{$field_id}', ";
 	}
@@ -148,7 +148,7 @@ sub user_get_id
 sub user_get
 {
 	my ($this, $user_id) = @_;
-	return undef unless defined $user_id && $user_id =~ /^\d+$/;
+	return undef unless $this->user_exists($user_id);
 	my %user = $this->{dbh}->query("	SELECT
 							*
 						FROM
