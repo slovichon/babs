@@ -96,7 +96,7 @@ sub unescape_slashes {
 =cut
 
 # This sub is used by str_parse() to clean up HTML
-# attributes. It has no other immediate usefulness
+# attributes.  It has no other immediate usefulness.
 sub _str_attr_clean {
 	my ($this, $name, $val) = @_;
 
@@ -132,7 +132,7 @@ sub _str_attr_clean {
 #	$babs->($str, [qw(glarch1 foo2)])
 #
 # we must guarentee the `glarch1' attribute will be
-# removed cleanly. We obviously cannot use regexes.
+# removed cleanly.  We obviously cannot use regexes.
 sub _str_remove_css {
 	my ($this, $str, $ids) = @_;
 	my @starts = (0);
