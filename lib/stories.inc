@@ -1,9 +1,9 @@
 # stories.inc - Babs story routines
 # $Id$
 
-use constant E_STORY_HEADLINE	=> (1<<0);	# No headline
-use constant E_STORY_STORY	=> (1<<1);	# No story
-use constant E_STORY_EXIST	=> (1<<2);	# Non-existant story
+use constant E_STORY_HEADLINE	=> 020&&(1<<0);	# No headline
+use constant E_STORY_STORY	=> 020&&(1<<1);	# No story
+use constant E_STORY_EXIST	=> 020&&(1<<2);	# Non-existant story
 
 sub story_add
 {
@@ -33,8 +33,8 @@ sub story_add
 	my ($field, $field_id);
 	while (($field_id, $field) = each(%{ $this->{story_fields} }))
 	{
-		$story->{$field_id} = $dbh->prepare_str(
-			$this->str_parse($story->{$field_id}, $field->{parse}), SQL_REG);
+		$story->{$field_id} = $dbh->prepare_str($this->str_parse(
+					$story->{$field_id}, $field->{parse}), SQL_REG);
 
 		$sql_fields .= " , ud_$field_id ";
 		$sql_values .= " , '$story->{$field_id}' ";
@@ -94,8 +94,8 @@ sub story_update
 	my ($field, $field_id);
 	while (($field_id, $field) = each(%{ $this->{story_fields} }))
 	{
-		$story->{$field_id} = $dbh->prepare_str(
-			$this->prepare_str($story->{$field_id}, $field->{parse}), SQL_REG);
+		$story->{$field_id} = $dbh->prepare_str($this->prepare_str(
+					$story->{$field_id}, $field->{parse}), SQL_REG);
 		
 		$sql .= "	ud_$field_id	= '$story->{$field_id}', ";
 	}
@@ -176,7 +176,7 @@ sub story_set_recent
 sub story_get
 {
 	my ($this, $story_id) = @_;
-	return () unless defined $story_id && $story_id =~ /^\d+$/;
+	return undef unless $this->story_exists($story_id);
 	my %story = $this->{dbh}->query("	SELECT
 							*
 						FROM
@@ -194,7 +194,7 @@ sub story_get
 		}
 		%story = %s;
 	}
-	return %story;
+	return \%story;
 }
 
 # Note: grabs top-level comments only
@@ -214,6 +214,18 @@ sub story_get_comments
 	my $id;
 	push @ids, $id while ($id) = $this->{dbh}->fetch_row();
 	return \@ids;
+}
+
+sub story_exists
+{
+	my ($this, $story_id) = @_;
+	return FALSE unless $story_id && $story_id =~ /^\d+$/;
+	return $this->{dbh}->query("	SELECT
+						story_id
+					FROM
+						babs_stories
+					WHERE
+						story_id = $story_id", DB_COL);
 }
 
 return 1;
