@@ -89,6 +89,7 @@ sub construct
 
 	# Set other properties
 	$prefs{error_const_group} = AutoConstantGroup->new;
+	$prefs{session_id} = undef;
 
 	unless (tied %prefs)
 	{
