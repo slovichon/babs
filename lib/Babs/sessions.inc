@@ -1,5 +1,6 @@
-# Babs session routines
+#!/usr/bin/perl
 # $Id$
+# Babs session routines
 
 use strict;
 
@@ -48,12 +49,12 @@ sub session_require_login {
 					my $user = $1;
 					my $pass = $2;
 					$user_id = $dbh->selectrow_array(<<SQL, {}, $user);
-							SELECT
-								user_id
-							FROM
-								babs_users
-							WHERE
-								username = ?
+						SELECT
+							user_id
+						FROM
+							babs_users
+						WHERE
+							username = ?
 SQL
 					unless ($user_id && $this->{thraxx}->session_auth($user_id, $pass)) {
 						return $user_id;
